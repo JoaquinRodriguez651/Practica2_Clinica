@@ -36,15 +36,10 @@ void comprobar(String descripcion, boolean correcto) {
     }
 }
 
-// Comprueba que la excepción es del tipo esperado y que la agenda no ha cambiado
-void comprobarExcepcion(String descripcion, Exception e, boolean esArgumento, Agenda agenda, String antes) {
-    boolean tipoBien;
-    if (esArgumento) {
-        tipoBien = e instanceof ArgumentoException;
-    } else {
-        tipoBien = e instanceof OperacionNoPosibleException;
-    }
-    comprobar(descripcion + " (" + e.getMessage() + ")", tipoBien && agenda.toString().equals(antes));
+// Comprueba que se ha lanzado ArgumentoException y que la agenda no ha cambiado
+void comprobarError(String descripcion, Exception e, Agenda agenda, String antes) {
+    comprobar(descripcion + " (" + e.getMessage() + ")",
+            e instanceof ArgumentoException && agenda.toString().equals(antes));
 }
 
 // Nombres de los clientes de una lista separados por comas
@@ -92,7 +87,7 @@ void pruebaEjemplo() throws Exception {
         agenda.reservar("Ana", MARTES20, LocalTime.of(13, 30), 30);
         comprobar("Otra cita para Ana el martes 20 no es posible", false);
     } catch (Exception e) {
-        comprobarExcepcion("Otra cita para Ana el martes 20 no es posible", e, false, agenda, antes);
+        comprobarError("Otra cita para Ana el martes 20 no es posible", e, agenda, antes);
     }
 
     agenda.cancelar("Bruno", MARTES20);
@@ -160,103 +155,103 @@ void pruebasPrecondiciones() throws Exception {
         agenda.reservar("  ", MARTES20, LocalTime.of(12, 0), 30);
         comprobar("reservar con cliente vacío", false);
     } catch (Exception e) {
-        comprobarExcepcion("reservar con cliente vacío", e, true, agenda, antes);
+        comprobarError("reservar con cliente vacío", e, agenda, antes);
     }
     try {
         agenda.reservar("Carmen", MARTES20, LocalTime.of(12, 0), 0);
         comprobar("reservar con duración 0", false);
     } catch (Exception e) {
-        comprobarExcepcion("reservar con duración 0", e, true, agenda, antes);
+        comprobarError("reservar con duración 0", e, agenda, antes);
     }
     try {
         agenda.reservar("Carmen", SABADO24, LocalTime.of(10, 0), 30);
         comprobar("reservar en sábado", false);
     } catch (Exception e) {
-        comprobarExcepcion("reservar en sábado", e, true, agenda, antes);
+        comprobarError("reservar en sábado", e, agenda, antes);
     }
     try {
         agenda.reservar("Carmen", MARTES20, LocalTime.of(13, 30), 60);
         comprobar("reservar acabando después del cierre", false);
     } catch (Exception e) {
-        comprobarExcepcion("reservar acabando después del cierre", e, true, agenda, antes);
+        comprobarError("reservar acabando después del cierre", e, agenda, antes);
     }
     try {
         agenda.reservar("Carmen", MARTES20, LocalTime.of(10, 30), 15);
         comprobar("reservar en un hueco ocupado", false);
     } catch (Exception e) {
-        comprobarExcepcion("reservar en un hueco ocupado", e, false, agenda, antes);
+        comprobarError("reservar en un hueco ocupado", e, agenda, antes);
     }
     try {
         agenda.reservar("ana", MARTES20, LocalTime.of(12, 0), 30);
         comprobar("reservar a \"ana\" si Ana ya tiene cita ese día", false);
     } catch (Exception e) {
-        comprobarExcepcion("reservar a \"ana\" si Ana ya tiene cita ese día", e, false, agenda, antes);
+        comprobarError("reservar a \"ana\" si Ana ya tiene cita ese día", e, agenda, antes);
     }
     try {
         agenda.cancelar("Ana", MIERCOLES21);
         comprobar("cancelar una cita que no existe", false);
     } catch (Exception e) {
-        comprobarExcepcion("cancelar una cita que no existe", e, false, agenda, antes);
+        comprobarError("cancelar una cita que no existe", e, agenda, antes);
     }
     try {
         agenda.retrasar("Ana", MARTES20, 0);
         comprobar("retrasar 0 minutos", false);
     } catch (Exception e) {
-        comprobarExcepcion("retrasar 0 minutos", e, true, agenda, antes);
+        comprobarError("retrasar 0 minutos", e, agenda, antes);
     }
     try {
         agenda.retrasar("Carmen", MARTES20, 15);
         comprobar("retrasar una cita que no existe", false);
     } catch (Exception e) {
-        comprobarExcepcion("retrasar una cita que no existe", e, false, agenda, antes);
+        comprobarError("retrasar una cita que no existe", e, agenda, antes);
     }
     try {
         agenda.retrasar("Ana", MARTES20, 30);
         comprobar("retrasar pisando la siguiente (D3)", false);
     } catch (Exception e) {
-        comprobarExcepcion("retrasar pisando la siguiente (D3)", e, false, agenda, antes);
+        comprobarError("retrasar pisando la siguiente (D3)", e, agenda, antes);
     }
     try {
         agenda.retrasar("Bruno", MARTES20, 240);
         comprobar("retrasar saliéndose del horario", false);
     } catch (Exception e) {
-        comprobarExcepcion("retrasar saliéndose del horario", e, false, agenda, antes);
+        comprobarError("retrasar saliéndose del horario", e, agenda, antes);
     }
     try {
         agenda.citaEn(2);
         comprobar("citaEn de una posición que no existe", false);
     } catch (Exception e) {
-        comprobarExcepcion("citaEn de una posición que no existe", e, true, agenda, antes);
+        comprobarError("citaEn de una posición que no existe", e, agenda, antes);
     }
     try {
         agenda.citaDe("Ana", MIERCOLES21);
         comprobar("citaDe sin cita ese día", false);
     } catch (Exception e) {
-        comprobarExcepcion("citaDe sin cita ese día", e, false, agenda, antes);
+        comprobarError("citaDe sin cita ese día", e, agenda, antes);
     }
     try {
         agenda.estaLibre(MARTES20, LocalTime.of(12, 0), 0);
         comprobar("estaLibre con duración 0", false);
     } catch (Exception e) {
-        comprobarExcepcion("estaLibre con duración 0", e, true, agenda, antes);
+        comprobarError("estaLibre con duración 0", e, agenda, antes);
     }
     try {
         agenda.primerHueco(SABADO24, 30);
         comprobar("primerHueco en un día sin hueco", false);
     } catch (Exception e) {
-        comprobarExcepcion("primerHueco en un día sin hueco", e, false, agenda, antes);
+        comprobarError("primerHueco en un día sin hueco", e, agenda, antes);
     }
     try {
         agenda.primerDiaConHueco(MARTES20, 301);
         comprobar("primerDiaConHueco con más minutos que la jornada", false);
     } catch (Exception e) {
-        comprobarExcepcion("primerDiaConHueco con más minutos que la jornada", e, true, agenda, antes);
+        comprobarError("primerDiaConHueco con más minutos que la jornada", e, agenda, antes);
     }
     try {
         agenda.tiempoLibre(SABADO24);
         comprobar("tiempoLibre de un sábado", false);
     } catch (Exception e) {
-        comprobarExcepcion("tiempoLibre de un sábado", e, true, agenda, antes);
+        comprobarError("tiempoLibre de un sábado", e, agenda, antes);
     }
 }
 
