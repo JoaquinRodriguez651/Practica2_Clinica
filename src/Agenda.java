@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * y hora, sin solaparse, y cada cliente tiene como mucho una cita al día.
  *
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
- * @version 1.0
+ * @version 2.0
  */
 public class Agenda {
 
@@ -37,14 +37,14 @@ public class Agenda {
      * @param fecha    día de la cita
      * @param inicio   hora de inicio
      * @param duracion duración en minutos
-     * @throws DatoNoValidoException       si algún dato no es válido o está fuera del horario
+     * @throws ArgumentoException       si algún dato no es válido o está fuera del horario
      * @throws OperacionNoPosibleException si el hueco está ocupado o el cliente ya tiene cita ese día
      */
     public void reservar(String cliente, LocalDate fecha, LocalTime inicio, int duracion)
-            throws DatoNoValidoException, OperacionNoPosibleException {
+            throws ArgumentoException, OperacionNoPosibleException {
         Cita nueva = new Cita(cliente, fecha, inicio, duracion); // comprueba cliente, null y duración
         if (!enHorario(fecha, minutos(inicio), duracion)) {
-            throw new DatoNoValidoException("La cita tiene que ser de lunes a viernes, de 9:00 a 14:00");
+            throw new ArgumentoException("La cita tiene que ser de lunes a viernes, de 9:00 a 14:00");
         }
         if (!libre(fecha, minutos(inicio), duracion, -1)) {
             throw new OperacionNoPosibleException("El hueco está ocupado");
@@ -66,10 +66,10 @@ public class Agenda {
      *
      * @param cliente nombre del cliente
      * @param fecha   día de la cita
-     * @throws DatoNoValidoException       si el cliente está vacío o la fecha es null
+     * @throws ArgumentoException       si el cliente está vacío o la fecha es null
      * @throws OperacionNoPosibleException si no tiene cita ese día
      */
-    public void cancelar(String cliente, LocalDate fecha) throws DatoNoValidoException, OperacionNoPosibleException {
+    public void cancelar(String cliente, LocalDate fecha) throws ArgumentoException, OperacionNoPosibleException {
         citas.remove(buscar(cliente, fecha));
     }
 
@@ -82,13 +82,13 @@ public class Agenda {
      * @param cliente nombre del cliente
      * @param fecha   día de la cita
      * @param minutos minutos que se retrasa
-     * @throws DatoNoValidoException       si algún dato no es válido
+     * @throws ArgumentoException       si algún dato no es válido
      * @throws OperacionNoPosibleException si no tiene cita, se sale del horario o pisa otra cita
      */
     public void retrasar(String cliente, LocalDate fecha, int minutos)
-            throws DatoNoValidoException, OperacionNoPosibleException {
+            throws ArgumentoException, OperacionNoPosibleException {
         if (minutos <= 0) {
-            throw new DatoNoValidoException("Los minutos deben ser mayores que 0");
+            throw new ArgumentoException("Los minutos deben ser mayores que 0");
         }
         int pos = buscar(cliente, fecha);
         Cita c = citas.get(pos);
@@ -115,11 +115,11 @@ public class Agenda {
      *
      * @param i posición
      * @return la cita de esa posición
-     * @throws DatoNoValidoException si la posición no existe
+     * @throws ArgumentoException si la posición no existe
      */
-    public Cita citaEn(int i) throws DatoNoValidoException {
+    public Cita citaEn(int i) throws ArgumentoException {
         if (i < 0 || i >= citas.size()) {
-            throw new DatoNoValidoException("No existe la posición " + i);
+            throw new ArgumentoException("No existe la posición " + i);
         }
         return citas.get(i);
     }
@@ -129,9 +129,9 @@ public class Agenda {
      *
      * @param fecha día
      * @return citas de ese día
-     * @throws DatoNoValidoException si la fecha es null
+     * @throws ArgumentoException si la fecha es null
      */
-    public ArrayList<Cita> citasDel(LocalDate fecha) throws DatoNoValidoException {
+    public ArrayList<Cita> citasDel(LocalDate fecha) throws ArgumentoException {
         comprobarFecha(fecha);
         ArrayList<Cita> lista = new ArrayList<>();
         for (Cita c : citas) {
@@ -148,9 +148,9 @@ public class Agenda {
      * @param cliente nombre del cliente
      * @param fecha   día
      * @return true si tiene cita
-     * @throws DatoNoValidoException si el cliente está vacío o la fecha es null
+     * @throws ArgumentoException si el cliente está vacío o la fecha es null
      */
-    public boolean tieneCita(String cliente, LocalDate fecha) throws DatoNoValidoException {
+    public boolean tieneCita(String cliente, LocalDate fecha) throws ArgumentoException {
         comprobarCliente(cliente);
         comprobarFecha(fecha);
         return posicionDe(cliente, fecha) != -1;
@@ -162,10 +162,10 @@ public class Agenda {
      * @param cliente nombre del cliente
      * @param fecha   día
      * @return la cita del cliente ese día
-     * @throws DatoNoValidoException       si el cliente está vacío o la fecha es null
+     * @throws ArgumentoException       si el cliente está vacío o la fecha es null
      * @throws OperacionNoPosibleException si no tiene cita ese día
      */
-    public Cita citaDe(String cliente, LocalDate fecha) throws DatoNoValidoException, OperacionNoPosibleException {
+    public Cita citaDe(String cliente, LocalDate fecha) throws ArgumentoException, OperacionNoPosibleException {
         return citas.get(buscar(cliente, fecha));
     }
 
@@ -174,9 +174,9 @@ public class Agenda {
      *
      * @param cliente nombre del cliente
      * @return número de citas del cliente
-     * @throws DatoNoValidoException si el cliente está vacío
+     * @throws ArgumentoException si el cliente está vacío
      */
-    public int numCitasDe(String cliente) throws DatoNoValidoException {
+    public int numCitasDe(String cliente) throws ArgumentoException {
         comprobarCliente(cliente);
         int contador = 0;
         for (Cita c : citas) {
@@ -195,12 +195,12 @@ public class Agenda {
      * @param inicio   hora de inicio
      * @param duracion duración en minutos
      * @return true si está libre
-     * @throws DatoNoValidoException si algún dato es null o la duración no es mayor que 0
+     * @throws ArgumentoException si algún dato es null o la duración no es mayor que 0
      */
-    public boolean estaLibre(LocalDate fecha, LocalTime inicio, int duracion) throws DatoNoValidoException {
+    public boolean estaLibre(LocalDate fecha, LocalTime inicio, int duracion) throws ArgumentoException {
         comprobarFecha(fecha);
         if (inicio == null || duracion <= 0) {
-            throw new DatoNoValidoException("Hora o duración no válidas");
+            throw new ArgumentoException("Hora o duración no válidas");
         }
         return libre(fecha, minutos(inicio), duracion, -1);
     }
@@ -211,9 +211,9 @@ public class Agenda {
      * @param fecha    día
      * @param duracion duración en minutos
      * @return true si hay hueco
-     * @throws DatoNoValidoException si la fecha es null o la duración no es mayor que 0
+     * @throws ArgumentoException si la fecha es null o la duración no es mayor que 0
      */
-    public boolean hayHueco(LocalDate fecha, int duracion) throws DatoNoValidoException {
+    public boolean hayHueco(LocalDate fecha, int duracion) throws ArgumentoException {
         return primerMinutoLibre(fecha, duracion) != -1;
     }
 
@@ -224,10 +224,10 @@ public class Agenda {
      * @param fecha    día
      * @param duracion duración en minutos
      * @return hora del primer hueco
-     * @throws DatoNoValidoException       si la fecha es null o la duración no es mayor que 0
+     * @throws ArgumentoException       si la fecha es null o la duración no es mayor que 0
      * @throws OperacionNoPosibleException si no hay hueco ese día
      */
-    public LocalTime primerHueco(LocalDate fecha, int duracion) throws DatoNoValidoException, OperacionNoPosibleException {
+    public LocalTime primerHueco(LocalDate fecha, int duracion) throws ArgumentoException, OperacionNoPosibleException {
         int h = primerMinutoLibre(fecha, duracion);
         if (h == -1) {
             throw new OperacionNoPosibleException("No hay hueco de " + duracion + " minutos ese día");
@@ -242,11 +242,11 @@ public class Agenda {
      * @param desde    primer día que se mira
      * @param duracion duración en minutos
      * @return primer día con hueco
-     * @throws DatoNoValidoException si la fecha es null o la duración no está entre 1 y JORNADA
+     * @throws ArgumentoException si la fecha es null o la duración no está entre 1 y JORNADA
      */
-    public LocalDate primerDiaConHueco(LocalDate desde, int duracion) throws DatoNoValidoException {
+    public LocalDate primerDiaConHueco(LocalDate desde, int duracion) throws ArgumentoException {
         if (duracion > JORNADA) {
-            throw new DatoNoValidoException("La duración no puede superar la jornada");
+            throw new ArgumentoException("La duración no puede superar la jornada");
         }
         LocalDate dia = desde;
         while (!hayHueco(dia, duracion)) {
@@ -260,12 +260,12 @@ public class Agenda {
      *
      * @param fecha día
      * @return minutos libres
-     * @throws DatoNoValidoException si la fecha es null o es fin de semana
+     * @throws ArgumentoException si la fecha es null o es fin de semana
      */
-    public int tiempoLibre(LocalDate fecha) throws DatoNoValidoException {
+    public int tiempoLibre(LocalDate fecha) throws ArgumentoException {
         comprobarFecha(fecha);
         if (!laborable(fecha)) {
-            throw new DatoNoValidoException("Los fines de semana la clínica está cerrada");
+            throw new ArgumentoException("Los fines de semana la clínica está cerrada");
         }
         int libres = JORNADA;
         for (Cita c : citasDel(fecha)) {
@@ -332,10 +332,10 @@ public class Agenda {
     }
 
     // Primer minuto del día en el que cabe la duración, o -1 si no hay hueco
-    private int primerMinutoLibre(LocalDate f, int duracion) throws DatoNoValidoException {
+    private int primerMinutoLibre(LocalDate f, int duracion) throws ArgumentoException {
         comprobarFecha(f);
         if (duracion <= 0) {
-            throw new DatoNoValidoException("La duración debe ser mayor que 0");
+            throw new ArgumentoException("La duración debe ser mayor que 0");
         }
         for (int h = minutos(APERTURA); h + duracion <= minutos(CIERRE); h++) {
             if (libre(f, h, duracion, -1)) {
@@ -356,7 +356,7 @@ public class Agenda {
     }
 
     // Como posicionDe, pero comprueba los datos y lanza excepción si no hay cita
-    private int buscar(String cliente, LocalDate fecha) throws DatoNoValidoException, OperacionNoPosibleException {
+    private int buscar(String cliente, LocalDate fecha) throws ArgumentoException, OperacionNoPosibleException {
         comprobarCliente(cliente);
         comprobarFecha(fecha);
         int pos = posicionDe(cliente, fecha);
@@ -371,15 +371,15 @@ public class Agenda {
                 || (a.getFecha().equals(b.getFecha()) && a.getInicio().isBefore(b.getInicio()));
     }
 
-    private void comprobarCliente(String cliente) throws DatoNoValidoException {
+    private void comprobarCliente(String cliente) throws ArgumentoException {
         if (cliente == null || cliente.trim().isEmpty()) {
-            throw new DatoNoValidoException("El cliente no puede estar vacío");
+            throw new ArgumentoException("El cliente no puede estar vacío");
         }
     }
 
-    private void comprobarFecha(LocalDate fecha) throws DatoNoValidoException {
+    private void comprobarFecha(LocalDate fecha) throws ArgumentoException {
         if (fecha == null) {
-            throw new DatoNoValidoException("La fecha no puede ser null");
+            throw new ArgumentoException("La fecha no puede ser null");
         }
     }
 }

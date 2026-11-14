@@ -37,10 +37,10 @@ void comprobar(String descripcion, boolean correcto) {
 }
 
 // Comprueba que la excepción es del tipo esperado y que la agenda no ha cambiado
-void comprobarExcepcion(String descripcion, Exception e, boolean esDatoNoValido, Agenda agenda, String antes) {
+void comprobarExcepcion(String descripcion, Exception e, boolean esArgumento, Agenda agenda, String antes) {
     boolean tipoBien;
-    if (esDatoNoValido) {
-        tipoBien = e instanceof DatoNoValidoException;
+    if (esArgumento) {
+        tipoBien = e instanceof ArgumentoException;
     } else {
         tipoBien = e instanceof OperacionNoPosibleException;
     }
@@ -147,7 +147,7 @@ void pruebasPrecondiciones() throws Exception {
     try {
         new Cita("Ana", MARTES20, LocalTime.of(23, 30), 60);
         comprobar("Cita que pasa de medianoche", false);
-    } catch (DatoNoValidoException e) {
+    } catch (ArgumentoException e) {
         comprobar("Cita que pasa de medianoche (" + e.getMessage() + ")", true);
     }
 

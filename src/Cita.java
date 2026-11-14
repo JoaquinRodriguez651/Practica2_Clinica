@@ -8,7 +8,7 @@ import java.time.LocalTime;
  * termina antes de medianoche.
  *
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
- * @version 1.0
+ * @version 2.0
  */
 public class Cita {
 
@@ -27,20 +27,20 @@ public class Cita {
      * @param fecha    día de la cita
      * @param inicio   hora de inicio
      * @param duracion duración en minutos
-     * @throws DatoNoValidoException si no se cumple la precondición
+     * @throws ArgumentoException si no se cumple la precondición
      */
-    public Cita(String cliente, LocalDate fecha, LocalTime inicio, int duracion) throws DatoNoValidoException {
+    public Cita(String cliente, LocalDate fecha, LocalTime inicio, int duracion) throws ArgumentoException {
         if (cliente == null || cliente.trim().isEmpty()) {
-            throw new DatoNoValidoException("El cliente no puede estar vacío");
+            throw new ArgumentoException("El cliente no puede estar vacío");
         }
         if (fecha == null || inicio == null) {
-            throw new DatoNoValidoException("La fecha y la hora no pueden ser null");
+            throw new ArgumentoException("La fecha y la hora no pueden ser null");
         }
         if (duracion <= 0) {
-            throw new DatoNoValidoException("La duración debe ser mayor que 0");
+            throw new ArgumentoException("La duración debe ser mayor que 0");
         }
         if (inicio.getHour() * 60 + inicio.getMinute() + duracion >= 1440) {
-            throw new DatoNoValidoException("La cita no puede pasar de medianoche");
+            throw new ArgumentoException("La cita no puede pasar de medianoche");
         }
         this.cliente = cliente;
         this.fecha = fecha;
