@@ -8,7 +8,6 @@ final LocalDate JUEVES22 = LocalDate.of(2026, 10, 22);
 final LocalDate VIERNES23 = LocalDate.of(2026, 10, 23);
 final LocalDate SABADO24 = LocalDate.of(2026, 10, 24);
 final LocalDate DOMINGO25 = LocalDate.of(2026, 10, 25);
-final LocalDate LUNES26 = LocalDate.of(2026, 10, 26);
 
 int pruebas = 0;
 int fallos = 0;
@@ -79,13 +78,13 @@ void pruebaEjemplo() throws Exception {
             agenda.tiempoLibre(MARTES20) == 95 && agenda.tiempoLibre(MIERCOLES21) == 0);
     comprobar("Libre el martes 20 a las 9:40 durante 20 min", agenda.estaLibre(MARTES20, LocalTime.of(9, 40), 20));
     comprobar("No libre el martes 20 a las 10:30 durante 15 min", !agenda.estaLibre(MARTES20, LocalTime.of(10, 30), 15));
-    comprobar("No libre el sábado 24", !agenda.estaLibre(SABADO24, LocalTime.of(10, 0), 30));
+    comprobar("La agenda abre el sábado 24 (los domingos los cierra la clínica)", agenda.estaLibre(SABADO24, LocalTime.of(10, 0), 30));
     comprobar("Primer hueco de 30 min el martes 20 = 12:00", agenda.primerHueco(MARTES20, 30).equals(LocalTime.of(12, 0)));
     comprobar("No hay hueco de 45 min el martes 20", !agenda.hayHueco(MARTES20, 45));
     comprobar("Primer día con hueco de 45 min desde el martes 20 = jueves 22",
             agenda.primerDiaConHueco(MARTES20, 45).equals(JUEVES22));
-    comprobar("Primer día con hueco de 30 min desde el sábado 24 = lunes 26",
-            agenda.primerDiaConHueco(SABADO24, 30).equals(LUNES26));
+    comprobar("Primer día con hueco de 30 min desde el sábado 24 = sábado 24",
+            agenda.primerDiaConHueco(SABADO24, 30).equals(SABADO24));
 
     String antes = agenda.toString();
     try {
@@ -188,12 +187,6 @@ void pruebasPrecondiciones() throws Exception {
         comprobarError("reservar con duración 0", e, agenda, antes);
     }
     try {
-        agenda.reservar("Carmen", SABADO24, LocalTime.of(10, 0), 30);
-        comprobar("reservar en sábado", false);
-    } catch (Exception e) {
-        comprobarError("reservar en sábado", e, agenda, antes);
-    }
-    try {
         agenda.reservar("Carmen", MARTES20, LocalTime.of(13, 30), 60);
         comprobar("reservar acabando después del cierre", false);
     } catch (Exception e) {
@@ -260,7 +253,7 @@ void pruebasPrecondiciones() throws Exception {
         comprobarError("estaLibre con duración 0", e, agenda, antes);
     }
     try {
-        agenda.primerHueco(SABADO24, 30);
+        agenda.primerHueco(MARTES20, 300);
         comprobar("primerHueco en un día sin hueco", false);
     } catch (Exception e) {
         comprobarError("primerHueco en un día sin hueco", e, agenda, antes);
@@ -272,10 +265,10 @@ void pruebasPrecondiciones() throws Exception {
         comprobarError("primerDiaConHueco con más minutos que la jornada", e, agenda, antes);
     }
     try {
-        agenda.tiempoLibre(SABADO24);
-        comprobar("tiempoLibre de un sábado", false);
+        agenda.tiempoLibre(null);
+        comprobar("tiempoLibre con fecha null", false);
     } catch (Exception e) {
-        comprobarError("tiempoLibre de un sábado", e, agenda, antes);
+        comprobarError("tiempoLibre con fecha null", e, agenda, antes);
     }
 }
 
@@ -302,7 +295,8 @@ void pruebasCasosLimite() throws Exception {
     comprobar("Cita que termina justo al cierre", agenda.citaDe("Iris", MARTES20).fin().equals(agenda.getCierre()));
 
     // Fechas
-    comprobar("Domingo cerrado", !agenda.estaLibre(DOMINGO25, LocalTime.of(10, 0), 30));
+    comprobar("La agenda abre sábados y domingos (el domingo lo cierra la clínica)",
+            agenda.estaLibre(SABADO24, LocalTime.of(10, 0), 30) && agenda.estaLibre(DOMINGO25, LocalTime.of(10, 0), 30));
     agenda.reservar("Ana", MIERCOLES21, LocalTime.of(10, 0), 30);
     comprobar("Cliente con citas en dos días", agenda.numCitasDe("Ana") == 2);
     agenda.retrasar("Ana", MIERCOLES21, 60);
@@ -317,8 +311,8 @@ void pruebasCasosLimite() throws Exception {
             otra.citaEn(0).getInicio().equals(LocalTime.of(13, 30)));
     Agenda llena = agenda9a14();
     llena.reservar("Elena", VIERNES23, LocalTime.of(9, 0), 300);
-    comprobar("Primer día con hueco salta el viernes lleno y el fin de semana",
-            llena.primerDiaConHueco(VIERNES23, 60).equals(LUNES26));
+    comprobar("Primer día con hueco tras un viernes lleno = sábado",
+            llena.primerDiaConHueco(VIERNES23, 60).equals(SABADO24));
 
     // Huecos
     Agenda huecos = agenda9a14();

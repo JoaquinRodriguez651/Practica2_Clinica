@@ -1,13 +1,13 @@
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 
 /**
- * Agenda de citas de un veterinario. Abre de lunes a viernes de apertura a cierre.
- * Invariante: apertura es anterior a cierre y las citas están en día laborable y dentro
- * del horario, ordenadas por fecha y hora, sin solaparse, y cada cliente tiene como mucho
- * una cita al día.
+ * Agenda de citas de un veterinario. Abre todos los días de apertura a cierre;
+ * qué días cierra la clínica (los domingos) lo comprueba la clínica, no la agenda.
+ * Invariante: apertura es anterior a cierre y las citas están dentro del horario,
+ * ordenadas por fecha y hora, sin solaparse, y cada cliente tiene como mucho una
+ * cita al día.
  *
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
  * @version 2.0
@@ -60,7 +60,7 @@ public class Agenda {
 
     /**
      * Añade una cita en su sitio según el orden cronológico.
-     * Pre: datos válidos, día laborable, dentro del horario, intervalo libre y el cliente
+     * Pre: datos válidos, dentro del horario, intervalo libre y el cliente
      * no tiene ya cita ese día.
      * Post: hay una cita más y las demás no cambian.
      *
@@ -72,8 +72,8 @@ public class Agenda {
      */
     public void reservar(String cliente, LocalDate fecha, LocalTime inicio, int duracion) throws ArgumentoException {
         Cita nueva = new Cita(cliente, fecha, inicio, duracion); // comprueba cliente, null y duración
-        if (!enHorario(fecha, minutos(inicio), duracion)) {
-            throw new ArgumentoException("La cita tiene que ser de lunes a viernes, entre las " + apertura + " y las " + cierre);
+        if (!enHorario(minutos(inicio), duracion)) {
+            throw new ArgumentoException("La cita tiene que estar entre las " + apertura + " y las " + cierre);
         }
         if (!libre(fecha, minutos(inicio), duracion, -1)) {
             throw new ArgumentoException("El hueco está ocupado");
@@ -213,8 +213,8 @@ public class Agenda {
     }
 
     /**
-     * Pre: duracion mayor que 0. Post: devuelve true si el intervalo es de un día laborable,
-     * está en horario y no se solapa con ninguna cita.
+     * Pre: duracion mayor que 0.
+     * Post: devuelve true si el intervalo está en horario y no se solapa con ninguna cita.
      *
      * @param fecha    día
      * @param inicio   hora de inicio
@@ -280,17 +280,14 @@ public class Agenda {
     }
 
     /**
-     * Pre: fecha es un día laborable. Post: devuelve getJornada() menos las duraciones de las citas de ese día.
+     * Pre: fecha no es null. Post: devuelve getJornada() menos las duraciones de las citas de ese día.
      *
      * @param fecha día
      * @return minutos libres
-     * @throws ArgumentoException si la fecha es null o es fin de semana
+     * @throws ArgumentoException si la fecha es null
      */
     public int tiempoLibre(LocalDate fecha) throws ArgumentoException {
         comprobarFecha(fecha);
-        if (!laborable(fecha)) {
-            throw new ArgumentoException("Los fines de semana la clínica está cerrada");
-        }
         int libres = getJornada();
         for (Cita c : citasDel(fecha)) {
             libres = libres - c.getDuracion();
@@ -328,12 +325,8 @@ public class Agenda {
         return h.getHour() * 60 + h.getMinute();
     }
 
-    private boolean laborable(LocalDate f) {
-        return f.getDayOfWeek() != DayOfWeek.SATURDAY && f.getDayOfWeek() != DayOfWeek.SUNDAY;
-    }
-
-    private boolean enHorario(LocalDate f, int inicio, int duracion) {
-        return laborable(f) && inicio >= minutos(apertura) && inicio + duracion <= minutos(cierre);
+    private boolean enHorario(int inicio, int duracion) {
+        return inicio >= minutos(apertura) && inicio + duracion <= minutos(cierre);
     }
 
     // La hora de fin no cuenta: 10:00-11:00 y 11:00-11:45 no se solapan
@@ -344,7 +337,7 @@ public class Agenda {
 
     // En horario y sin solaparse con ninguna cita, salvo la de la posición ignorar (-1 = ninguna)
     private boolean libre(LocalDate f, int inicio, int duracion, int ignorar) {
-        if (!enHorario(f, inicio, duracion)) {
+        if (!enHorario(inicio, duracion)) {
             return false;
         }
         for (int i = 0; i < citas.size(); i++) {
