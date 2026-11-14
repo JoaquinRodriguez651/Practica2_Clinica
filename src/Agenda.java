@@ -100,7 +100,8 @@ public class Agenda {
      * Retrasa unos minutos la cita de un cliente, el mismo día y con la misma duración.
      * Pre: minutos mayor que 0, el cliente tiene cita ese día y el nuevo intervalo está en
      * horario y no pisa ninguna otra cita.
-     * Post: es como cancelar y volver a reservar con el nuevo inicio. Las demás citas no cambian.
+     * Post: la cita se sustituye por una del mismo tipo que empieza minutos más tarde.
+     * Las demás citas no cambian.
      *
      * @param cliente nombre del cliente
      * @param fecha   día de la cita
@@ -117,7 +118,8 @@ public class Agenda {
         if (!libre(fecha, nuevoInicio, c.getDuracion(), pos)) {
             throw new ArgumentoException("La cita retrasada se sale del horario o pisa otra cita");
         }
-        Cita retrasada = new Cita(c.getCliente(), fecha, LocalTime.of(nuevoInicio / 60, nuevoInicio % 60), c.getDuracion());
+        // conInicio devuelve una cita del mismo tipo que c (polimorfismo)
+        Cita retrasada = c.conInicio(LocalTime.of(nuevoInicio / 60, nuevoInicio % 60));
         citas.remove(pos);
         insertar(retrasada);
     }

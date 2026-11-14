@@ -1,5 +1,6 @@
 // Práctica 1 - Parte 3: pruebas del TAD Agenda
 // Cada prueba imprime OK o FALLO y al final se muestra el total.
+// Usamos CitaPrueba porque Cita es abstracta.
 
 final LocalDate LUNES19 = LocalDate.of(2026, 10, 19);
 final LocalDate MARTES20 = LocalDate.of(2026, 10, 20);
@@ -41,9 +42,9 @@ void comprobarError(String descripcion, Exception e, Agenda agenda, String antes
             e instanceof ArgumentoException && agenda.toString().equals(antes));
 }
 
-// Para no escribir new Cita y LocalTime.of cada vez
+// Para no escribir LocalTime.of cada vez
 Cita cita(String cliente, LocalDate fecha, int hora, int minuto, int duracion) throws ArgumentoException {
-    return new Cita(cliente, fecha, LocalTime.of(hora, minuto), duracion);
+    return new CitaPrueba(cliente, fecha, LocalTime.of(hora, minuto), duracion);
 }
 
 // Agenda con el horario de la práctica 1 (9:00 a 14:00) para reutilizar sus ejemplos
@@ -116,10 +117,15 @@ void pruebasPostcondiciones() throws Exception {
 
     agenda = agenda9a14();
 
-    Cita c = new Cita("Ana", MARTES20, LocalTime.of(9, 0), 40);
+    Cita c = cita("Ana", MARTES20, 9, 0, 40);
     comprobar("Cita: getters, fin y toString",
             c.getCliente().equals("Ana") && c.getDuracion() == 40 && c.fin().equals(LocalTime.of(9, 40))
                     && c.toString().equals("09:00-09:40 Ana (40 min)"));
+
+    Cita copia = c.conInicio(LocalTime.of(10, 0));
+    comprobar("conInicio: cita nueva del mismo tipo y la original no cambia",
+            copia instanceof CitaPrueba && copia.getInicio().equals(LocalTime.of(10, 0))
+                    && copia.getDuracion() == 40 && c.getInicio().equals(LocalTime.of(9, 0)));
 
     agenda.reservar(cita("Ana", MARTES20, 9, 0, 40));
     agenda.reservar(cita("Bruno", MARTES20, 11, 0, 60));
@@ -145,6 +151,7 @@ void pruebasPostcondiciones() throws Exception {
     comprobar("retrasar: mismo número de citas, inicio + minutos, misma duración y mismo nombre",
             agenda.numCitas() == 2 && bruno.getInicio().equals(LocalTime.of(11, 30))
                     && bruno.getDuracion() == 60 && bruno.getCliente().equals("Bruno"));
+    comprobar("retrasar: la cita sigue siendo del mismo tipo (polimorfismo)", bruno instanceof CitaPrueba);
 
     Agenda salto = agenda9a14();
     salto.reservar(cita("Ana", MARTES20, 9, 0, 30));
