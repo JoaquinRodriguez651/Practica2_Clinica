@@ -4,27 +4,58 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 
 /**
- * Agenda de citas de una clínica veterinaria que abre de lunes a viernes de 9:00 a 14:00.
- * Invariante: las citas están en día laborable y dentro del horario, ordenadas por fecha
- * y hora, sin solaparse, y cada cliente tiene como mucho una cita al día.
+ * Agenda de citas de un veterinario. Abre de lunes a viernes de apertura a cierre.
+ * Invariante: apertura es anterior a cierre y las citas están en día laborable y dentro
+ * del horario, ordenadas por fecha y hora, sin solaparse, y cada cliente tiene como mucho
+ * una cita al día.
  *
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
  * @version 2.0
  */
 public class Agenda {
 
-    public static final LocalTime APERTURA = LocalTime.of(9, 0);
-    public static final LocalTime CIERRE = LocalTime.of(14, 0);
-    public static final int JORNADA = 300;
-
+    private final LocalTime apertura;
+    private final LocalTime cierre;
     private ArrayList<Cita> citas;
 
     /**
-     * Crea una agenda sin citas.
-     * Pre: ninguna. Post: numCitas() == 0.
+     * Crea una agenda sin citas con el horario indicado.
+     * Pre: apertura y cierre no son null y apertura es anterior a cierre.
+     * Post: numCitas() == 0.
+     *
+     * @param apertura hora de apertura
+     * @param cierre   hora de cierre
+     * @throws ArgumentoException si no se cumple la precondición
      */
-    public Agenda() {
+    public Agenda(LocalTime apertura, LocalTime cierre) throws ArgumentoException {
+        if (apertura == null || cierre == null) {
+            throw new ArgumentoException("La apertura y el cierre no pueden ser null");
+        }
+        if (!apertura.isBefore(cierre)) {
+            throw new ArgumentoException("La apertura tiene que ser antes del cierre");
+        }
+        this.apertura = apertura;
+        this.cierre = cierre;
         citas = new ArrayList<>();
+    }
+
+    /** Pre: ninguna. Post: devuelve la hora de apertura. */
+    public LocalTime getApertura() {
+        return apertura;
+    }
+
+    /** Pre: ninguna. Post: devuelve la hora de cierre. */
+    public LocalTime getCierre() {
+        return cierre;
+    }
+
+    /**
+     * Pre: ninguna. Post: devuelve los minutos entre la apertura y el cierre.
+     *
+     * @return minutos de la jornada
+     */
+    public int getJornada() {
+        return minutos(cierre) - minutos(apertura);
     }
 
     /**
@@ -42,7 +73,7 @@ public class Agenda {
     public void reservar(String cliente, LocalDate fecha, LocalTime inicio, int duracion) throws ArgumentoException {
         Cita nueva = new Cita(cliente, fecha, inicio, duracion); // comprueba cliente, null y duración
         if (!enHorario(fecha, minutos(inicio), duracion)) {
-            throw new ArgumentoException("La cita tiene que ser de lunes a viernes, de 9:00 a 14:00");
+            throw new ArgumentoException("La cita tiene que ser de lunes a viernes, entre las " + apertura + " y las " + cierre);
         }
         if (!libre(fecha, minutos(inicio), duracion, -1)) {
             throw new ArgumentoException("El hueco está ocupado");
@@ -229,16 +260,16 @@ public class Agenda {
     }
 
     /**
-     * Pre: duracion mayor que 0 y no mayor que JORNADA.
+     * Pre: duracion entre 1 y getJornada().
      * Post: devuelve la menor fecha igual o posterior a desde con hayHueco.
      *
      * @param desde    primer día que se mira
      * @param duracion duración en minutos
      * @return primer día con hueco
-     * @throws ArgumentoException si la fecha es null o la duración no está entre 1 y JORNADA
+     * @throws ArgumentoException si no se cumple la precondición
      */
     public LocalDate primerDiaConHueco(LocalDate desde, int duracion) throws ArgumentoException {
-        if (duracion > JORNADA) {
+        if (duracion > getJornada()) {
             throw new ArgumentoException("La duración no puede superar la jornada");
         }
         LocalDate dia = desde;
@@ -249,7 +280,7 @@ public class Agenda {
     }
 
     /**
-     * Pre: fecha es un día laborable. Post: devuelve JORNADA menos las duraciones de las citas de ese día.
+     * Pre: fecha es un día laborable. Post: devuelve getJornada() menos las duraciones de las citas de ese día.
      *
      * @param fecha día
      * @return minutos libres
@@ -260,7 +291,7 @@ public class Agenda {
         if (!laborable(fecha)) {
             throw new ArgumentoException("Los fines de semana la clínica está cerrada");
         }
-        int libres = JORNADA;
+        int libres = getJornada();
         for (Cita c : citasDel(fecha)) {
             libres = libres - c.getDuracion();
         }
@@ -302,7 +333,7 @@ public class Agenda {
     }
 
     private boolean enHorario(LocalDate f, int inicio, int duracion) {
-        return laborable(f) && inicio >= minutos(APERTURA) && inicio + duracion <= minutos(CIERRE);
+        return laborable(f) && inicio >= minutos(apertura) && inicio + duracion <= minutos(cierre);
     }
 
     // La hora de fin no cuenta: 10:00-11:00 y 11:00-11:45 no se solapan
@@ -330,7 +361,7 @@ public class Agenda {
         if (duracion <= 0) {
             throw new ArgumentoException("La duración debe ser mayor que 0");
         }
-        for (int h = minutos(APERTURA); h + duracion <= minutos(CIERRE); h++) {
+        for (int h = minutos(apertura); h + duracion <= minutos(cierre); h++) {
             if (libre(f, h, duracion, -1)) {
                 return h;
             }

@@ -42,6 +42,11 @@ void comprobarError(String descripcion, Exception e, Agenda agenda, String antes
             e instanceof ArgumentoException && agenda.toString().equals(antes));
 }
 
+// Agenda con el horario de la práctica 1 (9:00 a 14:00) para reutilizar sus ejemplos
+Agenda agenda9a14() throws ArgumentoException {
+    return new Agenda(LocalTime.of(9, 0), LocalTime.of(14, 0));
+}
+
 // Nombres de los clientes de una lista separados por comas
 String clientes(ArrayList<Cita> lista) {
     String texto = "";
@@ -56,7 +61,7 @@ String clientes(ArrayList<Cita> lista) {
 
 void pruebaEjemplo() throws Exception {
     IO.println("--- Ejemplo del enunciado ---");
-    Agenda agenda = new Agenda();
+    Agenda agenda = agenda9a14();
     agenda.reservar("Bruno", MARTES20, LocalTime.of(10, 0), 60);
     agenda.reservar("Ana", MARTES20, LocalTime.of(9, 0), 40);
     agenda.reservar("David", MARTES20, LocalTime.of(12, 30), 60);
@@ -97,8 +102,15 @@ void pruebaEjemplo() throws Exception {
 
 void pruebasPostcondiciones() throws Exception {
     IO.println("\n--- Postcondiciones ---");
-    Agenda agenda = new Agenda();
-    comprobar("Agenda(): sin citas", agenda.numCitas() == 0 && agenda.toString().equals("Agenda vacía"));
+    Agenda agenda = new Agenda(LocalTime.of(9, 0), LocalTime.of(20, 0));
+    comprobar("Agenda(9:00, 20:00): sin citas, getters y jornada de 660 min",
+            agenda.numCitas() == 0 && agenda.toString().equals("Agenda vacía")
+                    && agenda.getApertura().equals(LocalTime.of(9, 0)) && agenda.getCierre().equals(LocalTime.of(20, 0))
+                    && agenda.getJornada() == 660);
+    comprobar("Con horario 9-20 cabe 19:30-20:00 pero no 19:31-20:01",
+            agenda.estaLibre(MARTES20, LocalTime.of(19, 30), 30) && !agenda.estaLibre(MARTES20, LocalTime.of(19, 31), 30));
+
+    agenda = agenda9a14();
 
     Cita c = new Cita("Ana", MARTES20, LocalTime.of(9, 0), 40);
     comprobar("Cita: getters, fin y toString",
@@ -130,7 +142,7 @@ void pruebasPostcondiciones() throws Exception {
             agenda.numCitas() == 2 && bruno.getInicio().equals(LocalTime.of(11, 30))
                     && bruno.getDuracion() == 60 && bruno.getCliente().equals("Bruno"));
 
-    Agenda salto = new Agenda();
+    Agenda salto = agenda9a14();
     salto.reservar("Ana", MARTES20, LocalTime.of(9, 0), 30);
     salto.reservar("Bruno", MARTES20, LocalTime.of(9, 30), 30);
     salto.retrasar("Ana", MARTES20, 60);
@@ -140,13 +152,25 @@ void pruebasPostcondiciones() throws Exception {
 void pruebasPrecondiciones() throws Exception {
     IO.println("\n--- Precondiciones ---");
     try {
+        new Agenda(LocalTime.of(14, 0), LocalTime.of(9, 0));
+        comprobar("Agenda con apertura después del cierre", false);
+    } catch (ArgumentoException e) {
+        comprobar("Agenda con apertura después del cierre (" + e.getMessage() + ")", true);
+    }
+    try {
+        new Agenda(null, LocalTime.of(14, 0));
+        comprobar("Agenda con apertura null", false);
+    } catch (ArgumentoException e) {
+        comprobar("Agenda con apertura null (" + e.getMessage() + ")", true);
+    }
+    try {
         new Cita("Ana", MARTES20, LocalTime.of(23, 30), 60);
         comprobar("Cita que pasa de medianoche", false);
     } catch (ArgumentoException e) {
         comprobar("Cita que pasa de medianoche (" + e.getMessage() + ")", true);
     }
 
-    Agenda agenda = new Agenda();
+    Agenda agenda = agenda9a14();
     agenda.reservar("Ana", MARTES20, LocalTime.of(9, 0), 40);
     agenda.reservar("Bruno", MARTES20, LocalTime.of(10, 0), 60);
     String antes = agenda.toString();
@@ -259,7 +283,7 @@ void pruebasCasosLimite() throws Exception {
     IO.println("\n--- Casos límite ---");
 
     // Orden
-    Agenda agenda = new Agenda();
+    Agenda agenda = agenda9a14();
     agenda.reservar("Bruno", MARTES20, LocalTime.of(11, 0), 30);
     agenda.reservar("Ana", MARTES20, LocalTime.of(9, 0), 30);    // al principio
     agenda.reservar("Carmen", MARTES20, LocalTime.of(13, 0), 30); // al final
@@ -275,7 +299,7 @@ void pruebasCasosLimite() throws Exception {
     agenda.reservar("Hugo", MARTES20, LocalTime.of(9, 30), 30);
     comprobar("Citas contiguas (9:00-9:30 y 9:30-10:00)", agenda.tieneCita("Hugo", MARTES20));
     agenda.reservar("Iris", MARTES20, LocalTime.of(13, 30), 30);
-    comprobar("Cita que termina justo al cierre", agenda.citaDe("Iris", MARTES20).fin().equals(Agenda.CIERRE));
+    comprobar("Cita que termina justo al cierre", agenda.citaDe("Iris", MARTES20).fin().equals(agenda.getCierre()));
 
     // Fechas
     comprobar("Domingo cerrado", !agenda.estaLibre(DOMINGO25, LocalTime.of(10, 0), 30));
@@ -285,19 +309,19 @@ void pruebasCasosLimite() throws Exception {
     agenda.cancelar("Ana", MARTES20);
     comprobar("Retrasar y cancelar solo afectan a la cita de ese día",
             !agenda.tieneCita("Ana", MARTES20) && agenda.citaDe("Ana", MIERCOLES21).getInicio().equals(LocalTime.of(11, 0)));
-    Agenda otra = new Agenda();
+    Agenda otra = agenda9a14();
     otra.reservar("Bruno", MARTES20, LocalTime.of(13, 0), 30);
     otra.reservar("Carmen", MIERCOLES21, LocalTime.of(9, 0), 60);
     otra.retrasar("Bruno", MARTES20, 30);
     comprobar("Retrasar la última cita del día cuando la siguiente es de otro día",
             otra.citaEn(0).getInicio().equals(LocalTime.of(13, 30)));
-    Agenda llena = new Agenda();
+    Agenda llena = agenda9a14();
     llena.reservar("Elena", VIERNES23, LocalTime.of(9, 0), 300);
     comprobar("Primer día con hueco salta el viernes lleno y el fin de semana",
             llena.primerDiaConHueco(VIERNES23, 60).equals(LUNES26));
 
     // Huecos
-    Agenda huecos = new Agenda();
+    Agenda huecos = agenda9a14();
     huecos.reservar("Ana", JUEVES22, LocalTime.of(10, 0), 60);
     huecos.reservar("Bruno", JUEVES22, LocalTime.of(12, 0), 60);
     comprobar("Hueco al principio del día (9:00)", huecos.primerHueco(JUEVES22, 60).equals(LocalTime.of(9, 0)));
