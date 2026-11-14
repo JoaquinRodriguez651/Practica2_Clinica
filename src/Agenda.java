@@ -21,7 +21,7 @@ public class Agenda {
     /**
      * Crea una agenda sin citas con el horario indicado.
      * Pre: apertura y cierre no son null y apertura es anterior a cierre.
-     * Post: numCitas() == 0.
+     * Post: getNumCitas() == 0.
      *
      * @param apertura hora de apertura
      * @param cierre   hora de cierre
@@ -129,19 +129,19 @@ public class Agenda {
      *
      * @return número de citas
      */
-    public int numCitas() {
+    public int getNumCitas() {
         return citas.size();
     }
 
     /**
      * Devuelve la cita de una posición en orden cronológico.
-     * Pre: i entre 0 y numCitas() - 1. Post: devuelve la cita de la posición i.
+     * Pre: i entre 0 y getNumCitas() - 1. Post: devuelve la cita de la posición i.
      *
      * @param i posición
      * @return la cita de esa posición
      * @throws ArgumentoException si la posición no existe
      */
-    public Cita citaEn(int i) throws ArgumentoException {
+    public Cita getCitaEn(int i) throws ArgumentoException {
         if (i < 0 || i >= citas.size()) {
             throw new ArgumentoException("No existe la posición " + i);
         }
@@ -155,7 +155,7 @@ public class Agenda {
      * @return citas de ese día
      * @throws ArgumentoException si la fecha es null
      */
-    public ArrayList<Cita> citasDel(LocalDate fecha) throws ArgumentoException {
+    public ArrayList<Cita> getCitasDel(LocalDate fecha) throws ArgumentoException {
         comprobarFecha(fecha);
         ArrayList<Cita> lista = new ArrayList<>();
         for (Cita c : citas) {
@@ -188,26 +188,8 @@ public class Agenda {
      * @return la cita del cliente ese día
      * @throws ArgumentoException si no se cumple la precondición
      */
-    public Cita citaDe(String cliente, LocalDate fecha) throws ArgumentoException {
+    public Cita getCitaDe(String cliente, LocalDate fecha) throws ArgumentoException {
         return citas.get(buscar(cliente, fecha));
-    }
-
-    /**
-     * Pre: el cliente no está vacío. Post: devuelve cuántas citas tiene en total.
-     *
-     * @param cliente nombre del cliente
-     * @return número de citas del cliente
-     * @throws ArgumentoException si el cliente está vacío
-     */
-    public int numCitasDe(String cliente) throws ArgumentoException {
-        comprobarCliente(cliente);
-        int contador = 0;
-        for (Cita c : citas) {
-            if (c.getCliente().equalsIgnoreCase(cliente)) {
-                contador++;
-            }
-        }
-        return contador;
     }
 
     /**
@@ -284,10 +266,10 @@ public class Agenda {
      * @return minutos libres
      * @throws ArgumentoException si la fecha es null
      */
-    public int tiempoLibre(LocalDate fecha) throws ArgumentoException {
+    public int getTiempoLibre(LocalDate fecha) throws ArgumentoException {
         comprobarFecha(fecha);
         int libres = getJornada();
-        for (Cita c : citasDel(fecha)) {
+        for (Cita c : getCitasDel(fecha)) {
             libres = libres - c.getDuracion();
         }
         return libres;

@@ -76,7 +76,7 @@ public abstract class Cita {
      *
      * @return hora a la que termina la cita
      */
-    public final LocalTime fin() {
+    public final LocalTime getFin() {
         return inicio.plusMinutes(duracion);
     }
 
@@ -99,6 +99,6 @@ public abstract class Cita {
      */
     @Override
     public String toString() {
-        return inicio + "-" + fin() + " " + cliente + " (" + duracion + " min)";
+        return inicio + "-" + getFin() + " " + cliente + " (" + duracion + " min)";
     }
 }
