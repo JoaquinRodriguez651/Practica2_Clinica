@@ -41,6 +41,11 @@ void comprobarError(String descripcion, Exception e, Agenda agenda, String antes
             e instanceof ArgumentoException && agenda.toString().equals(antes));
 }
 
+// Para no escribir new Cita y LocalTime.of cada vez
+Cita cita(String cliente, LocalDate fecha, int hora, int minuto, int duracion) throws ArgumentoException {
+    return new Cita(cliente, fecha, LocalTime.of(hora, minuto), duracion);
+}
+
 // Agenda con el horario de la práctica 1 (9:00 a 14:00) para reutilizar sus ejemplos
 Agenda agenda9a14() throws ArgumentoException {
     return new Agenda(LocalTime.of(9, 0), LocalTime.of(14, 0));
@@ -61,12 +66,12 @@ String clientes(ArrayList<Cita> lista) {
 void pruebaEjemplo() throws Exception {
     IO.println("--- Ejemplo del enunciado ---");
     Agenda agenda = agenda9a14();
-    agenda.reservar("Bruno", MARTES20, LocalTime.of(10, 0), 60);
-    agenda.reservar("Ana", MARTES20, LocalTime.of(9, 0), 40);
-    agenda.reservar("David", MARTES20, LocalTime.of(12, 30), 60);
-    agenda.reservar("Carmen", MARTES20, LocalTime.of(11, 15), 45);
-    agenda.reservar("Ana", LUNES19, LocalTime.of(13, 0), 30);
-    agenda.reservar("Elena", MIERCOLES21, LocalTime.of(9, 0), 300);
+    agenda.reservar(cita("Bruno", MARTES20, 10, 0, 60));
+    agenda.reservar(cita("Ana", MARTES20, 9, 0, 40));
+    agenda.reservar(cita("David", MARTES20, 12, 30, 60));
+    agenda.reservar(cita("Carmen", MARTES20, 11, 15, 45));
+    agenda.reservar(cita("Ana", LUNES19, 13, 0, 30));
+    agenda.reservar(cita("Elena", MIERCOLES21, 9, 0, 300));
     IO.println(agenda);
 
     comprobar("Orden: Ana (lunes), Ana, Bruno, Carmen, David, Elena",
@@ -88,7 +93,7 @@ void pruebaEjemplo() throws Exception {
 
     String antes = agenda.toString();
     try {
-        agenda.reservar("Ana", MARTES20, LocalTime.of(13, 30), 30);
+        agenda.reservar(cita("Ana", MARTES20, 13, 30, 30));
         comprobar("Otra cita para Ana el martes 20 no es posible", false);
     } catch (Exception e) {
         comprobarError("Otra cita para Ana el martes 20 no es posible", e, agenda, antes);
@@ -116,9 +121,9 @@ void pruebasPostcondiciones() throws Exception {
             c.getCliente().equals("Ana") && c.getDuracion() == 40 && c.fin().equals(LocalTime.of(9, 40))
                     && c.toString().equals("09:00-09:40 Ana (40 min)"));
 
-    agenda.reservar("Ana", MARTES20, LocalTime.of(9, 0), 40);
-    agenda.reservar("Bruno", MARTES20, LocalTime.of(11, 0), 60);
-    agenda.reservar("Carmen", MARTES20, LocalTime.of(10, 0), 30);
+    agenda.reservar(cita("Ana", MARTES20, 9, 0, 40));
+    agenda.reservar(cita("Bruno", MARTES20, 11, 0, 60));
+    agenda.reservar(cita("Carmen", MARTES20, 10, 0, 30));
     comprobar("reservar: una cita más, en su sitio y las demás igual",
             agenda.numCitas() == 3 && clientes(agenda.citasDel(MARTES20)).equals("Ana, Carmen, Bruno"));
 
@@ -142,8 +147,8 @@ void pruebasPostcondiciones() throws Exception {
                     && bruno.getDuracion() == 60 && bruno.getCliente().equals("Bruno"));
 
     Agenda salto = agenda9a14();
-    salto.reservar("Ana", MARTES20, LocalTime.of(9, 0), 30);
-    salto.reservar("Bruno", MARTES20, LocalTime.of(9, 30), 30);
+    salto.reservar(cita("Ana", MARTES20, 9, 0, 30));
+    salto.reservar(cita("Bruno", MARTES20, 9, 30, 30));
     salto.retrasar("Ana", MARTES20, 60);
     comprobar("retrasar: la cita puede saltar por encima de otra", clientes(salto.citasDel(MARTES20)).equals("Bruno, Ana"));
 }
@@ -163,43 +168,55 @@ void pruebasPrecondiciones() throws Exception {
         comprobar("Agenda con apertura null (" + e.getMessage() + ")", true);
     }
     try {
-        new Cita("Ana", MARTES20, LocalTime.of(23, 30), 60);
+        cita("  ", MARTES20, 9, 0, 30);
+        comprobar("Cita con cliente vacío", false);
+    } catch (ArgumentoException e) {
+        comprobar("Cita con cliente vacío (" + e.getMessage() + ")", true);
+    }
+    try {
+        cita("Ana", MARTES20, 9, 0, 0);
+        comprobar("Cita con duración 0", false);
+    } catch (ArgumentoException e) {
+        comprobar("Cita con duración 0 (" + e.getMessage() + ")", true);
+    }
+    try {
+        cita("Ana", MARTES20, 23, 30, 60);
         comprobar("Cita que pasa de medianoche", false);
     } catch (ArgumentoException e) {
         comprobar("Cita que pasa de medianoche (" + e.getMessage() + ")", true);
     }
 
     Agenda agenda = agenda9a14();
-    agenda.reservar("Ana", MARTES20, LocalTime.of(9, 0), 40);
-    agenda.reservar("Bruno", MARTES20, LocalTime.of(10, 0), 60);
+    agenda.reservar(cita("Ana", MARTES20, 9, 0, 40));
+    agenda.reservar(cita("Bruno", MARTES20, 10, 0, 60));
     String antes = agenda.toString();
 
     try {
-        agenda.reservar("  ", MARTES20, LocalTime.of(12, 0), 30);
-        comprobar("reservar con cliente vacío", false);
+        agenda.reservar(null);
+        comprobar("reservar null", false);
     } catch (Exception e) {
-        comprobarError("reservar con cliente vacío", e, agenda, antes);
+        comprobarError("reservar null", e, agenda, antes);
     }
     try {
-        agenda.reservar("Carmen", MARTES20, LocalTime.of(12, 0), 0);
-        comprobar("reservar con duración 0", false);
+        agenda.reservar(cita("Carmen", MARTES20, 8, 30, 30));
+        comprobar("reservar antes de la apertura", false);
     } catch (Exception e) {
-        comprobarError("reservar con duración 0", e, agenda, antes);
+        comprobarError("reservar antes de la apertura", e, agenda, antes);
     }
     try {
-        agenda.reservar("Carmen", MARTES20, LocalTime.of(13, 30), 60);
+        agenda.reservar(cita("Carmen", MARTES20, 13, 30, 60));
         comprobar("reservar acabando después del cierre", false);
     } catch (Exception e) {
         comprobarError("reservar acabando después del cierre", e, agenda, antes);
     }
     try {
-        agenda.reservar("Carmen", MARTES20, LocalTime.of(10, 30), 15);
+        agenda.reservar(cita("Carmen", MARTES20, 10, 30, 15));
         comprobar("reservar en un hueco ocupado", false);
     } catch (Exception e) {
         comprobarError("reservar en un hueco ocupado", e, agenda, antes);
     }
     try {
-        agenda.reservar("ana", MARTES20, LocalTime.of(12, 0), 30);
+        agenda.reservar(cita("ana", MARTES20, 12, 0, 30));
         comprobar("reservar a \"ana\" si Ana ya tiene cita ese día", false);
     } catch (Exception e) {
         comprobarError("reservar a \"ana\" si Ana ya tiene cita ese día", e, agenda, antes);
@@ -277,52 +294,52 @@ void pruebasCasosLimite() throws Exception {
 
     // Orden
     Agenda agenda = agenda9a14();
-    agenda.reservar("Bruno", MARTES20, LocalTime.of(11, 0), 30);
-    agenda.reservar("Ana", MARTES20, LocalTime.of(9, 0), 30);    // al principio
-    agenda.reservar("Carmen", MARTES20, LocalTime.of(13, 0), 30); // al final
-    agenda.reservar("David", MARTES20, LocalTime.of(10, 0), 30);  // en medio
+    agenda.reservar(cita("Bruno", MARTES20, 11, 0, 30));
+    agenda.reservar(cita("Ana", MARTES20, 9, 0, 30));    // al principio
+    agenda.reservar(cita("Carmen", MARTES20, 13, 0, 30)); // al final
+    agenda.reservar(cita("David", MARTES20, 10, 0, 30));  // en medio
     comprobar("Reservar al principio, al final y en medio",
             clientes(agenda.citasDel(MARTES20)).equals("Ana, David, Bruno, Carmen"));
-    agenda.reservar("Elena", LUNES19, LocalTime.of(13, 30), 30);
-    agenda.reservar("Fran", MIERCOLES21, LocalTime.of(9, 0), 30);
+    agenda.reservar(cita("Elena", LUNES19, 13, 30, 30));
+    agenda.reservar(cita("Fran", MIERCOLES21, 9, 0, 30));
     comprobar("Fecha anterior con hora posterior va delante, y al revés",
             agenda.citaEn(0).getCliente().equals("Elena") && agenda.citaEn(5).getCliente().equals("Fran"));
-    agenda.reservar("Gema", JUEVES22, LocalTime.of(9, 0), 30);
+    agenda.reservar(cita("Gema", JUEVES22, 9, 0, 30));
     comprobar("Misma hora en días distintos", agenda.citaEn(6).getCliente().equals("Gema"));
-    agenda.reservar("Hugo", MARTES20, LocalTime.of(9, 30), 30);
+    agenda.reservar(cita("Hugo", MARTES20, 9, 30, 30));
     comprobar("Citas contiguas (9:00-9:30 y 9:30-10:00)", agenda.tieneCita("Hugo", MARTES20));
-    agenda.reservar("Iris", MARTES20, LocalTime.of(13, 30), 30);
+    agenda.reservar(cita("Iris", MARTES20, 13, 30, 30));
     comprobar("Cita que termina justo al cierre", agenda.citaDe("Iris", MARTES20).fin().equals(agenda.getCierre()));
 
     // Fechas
     comprobar("La agenda abre sábados y domingos (el domingo lo cierra la clínica)",
             agenda.estaLibre(SABADO24, LocalTime.of(10, 0), 30) && agenda.estaLibre(DOMINGO25, LocalTime.of(10, 0), 30));
-    agenda.reservar("Ana", MIERCOLES21, LocalTime.of(10, 0), 30);
+    agenda.reservar(cita("Ana", MIERCOLES21, 10, 0, 30));
     comprobar("Cliente con citas en dos días", agenda.numCitasDe("Ana") == 2);
     agenda.retrasar("Ana", MIERCOLES21, 60);
     agenda.cancelar("Ana", MARTES20);
     comprobar("Retrasar y cancelar solo afectan a la cita de ese día",
             !agenda.tieneCita("Ana", MARTES20) && agenda.citaDe("Ana", MIERCOLES21).getInicio().equals(LocalTime.of(11, 0)));
     Agenda otra = agenda9a14();
-    otra.reservar("Bruno", MARTES20, LocalTime.of(13, 0), 30);
-    otra.reservar("Carmen", MIERCOLES21, LocalTime.of(9, 0), 60);
+    otra.reservar(cita("Bruno", MARTES20, 13, 0, 30));
+    otra.reservar(cita("Carmen", MIERCOLES21, 9, 0, 60));
     otra.retrasar("Bruno", MARTES20, 30);
     comprobar("Retrasar la última cita del día cuando la siguiente es de otro día",
             otra.citaEn(0).getInicio().equals(LocalTime.of(13, 30)));
     Agenda llena = agenda9a14();
-    llena.reservar("Elena", VIERNES23, LocalTime.of(9, 0), 300);
+    llena.reservar(cita("Elena", VIERNES23, 9, 0, 300));
     comprobar("Primer día con hueco tras un viernes lleno = sábado",
             llena.primerDiaConHueco(VIERNES23, 60).equals(SABADO24));
 
     // Huecos
     Agenda huecos = agenda9a14();
-    huecos.reservar("Ana", JUEVES22, LocalTime.of(10, 0), 60);
-    huecos.reservar("Bruno", JUEVES22, LocalTime.of(12, 0), 60);
+    huecos.reservar(cita("Ana", JUEVES22, 10, 0, 60));
+    huecos.reservar(cita("Bruno", JUEVES22, 12, 0, 60));
     comprobar("Hueco al principio del día (9:00)", huecos.primerHueco(JUEVES22, 60).equals(LocalTime.of(9, 0)));
-    huecos.reservar("Carmen", JUEVES22, LocalTime.of(9, 0), 60);
+    huecos.reservar(cita("Carmen", JUEVES22, 9, 0, 60));
     comprobar("Hueco entre dos citas (11:00)", huecos.primerHueco(JUEVES22, 60).equals(LocalTime.of(11, 0)));
-    huecos.reservar("David", JUEVES22, LocalTime.of(11, 0), 60);
+    huecos.reservar(cita("David", JUEVES22, 11, 0, 60));
     comprobar("Hueco al final del día (13:00)", huecos.primerHueco(JUEVES22, 60).equals(LocalTime.of(13, 0)));
-    huecos.reservar("Elena", JUEVES22, LocalTime.of(13, 0), 60);
+    huecos.reservar(cita("Elena", JUEVES22, 13, 0, 60));
     comprobar("Día sin hueco", !huecos.hayHueco(JUEVES22, 1) && huecos.tiempoLibre(JUEVES22) == 0);
 }

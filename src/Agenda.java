@@ -59,33 +59,28 @@ public class Agenda {
     }
 
     /**
-     * Añade una cita en su sitio según el orden cronológico.
-     * Pre: datos válidos, dentro del horario, intervalo libre y el cliente
+     * Añade una cita ya creada en su sitio según el orden cronológico.
+     * Pre: c no es null, está dentro del horario, el intervalo está libre y el cliente
      * no tiene ya cita ese día.
      * Post: hay una cita más y las demás no cambian.
      *
-     * @param cliente  nombre del cliente
-     * @param fecha    día de la cita
-     * @param inicio   hora de inicio
-     * @param duracion duración en minutos
+     * @param c cita que se reserva
      * @throws ArgumentoException si no se cumple la precondición
      */
-    public void reservar(String cliente, LocalDate fecha, LocalTime inicio, int duracion) throws ArgumentoException {
-        Cita nueva = new Cita(cliente, fecha, inicio, duracion); // comprueba cliente, null y duración
-        if (!enHorario(minutos(inicio), duracion)) {
+    public void reservar(Cita c) throws ArgumentoException {
+        if (c == null) {
+            throw new ArgumentoException("La cita no puede ser null");
+        }
+        if (!enHorario(minutos(c.getInicio()), c.getDuracion())) {
             throw new ArgumentoException("La cita tiene que estar entre las " + apertura + " y las " + cierre);
         }
-        if (!libre(fecha, minutos(inicio), duracion, -1)) {
+        if (!libre(c.getFecha(), minutos(c.getInicio()), c.getDuracion(), -1)) {
             throw new ArgumentoException("El hueco está ocupado");
         }
-        if (posicionDe(cliente, fecha) != -1) {
-            throw new ArgumentoException(cliente + " ya tiene cita ese día");
+        if (posicionDe(c.getCliente(), c.getFecha()) != -1) {
+            throw new ArgumentoException(c.getCliente() + " ya tiene cita ese día");
         }
-        int pos = 0;
-        while (pos < citas.size() && !vaAntes(nueva, citas.get(pos))) {
-            pos++;
-        }
-        citas.add(pos, nueva);
+        insertar(c);
     }
 
     /**
@@ -122,8 +117,9 @@ public class Agenda {
         if (!libre(fecha, nuevoInicio, c.getDuracion(), pos)) {
             throw new ArgumentoException("La cita retrasada se sale del horario o pisa otra cita");
         }
+        Cita retrasada = new Cita(c.getCliente(), fecha, LocalTime.of(nuevoInicio / 60, nuevoInicio % 60), c.getDuracion());
         citas.remove(pos);
-        reservar(c.getCliente(), fecha, LocalTime.of(nuevoInicio / 60, nuevoInicio % 60), c.getDuracion());
+        insertar(retrasada);
     }
 
     /**
@@ -381,6 +377,15 @@ public class Agenda {
             throw new ArgumentoException(cliente + " no tiene cita ese día");
         }
         return pos;
+    }
+
+    // Mete la cita en su sitio para que la lista siga en orden cronológico
+    private void insertar(Cita nueva) {
+        int pos = 0;
+        while (pos < citas.size() && !vaAntes(nueva, citas.get(pos))) {
+            pos++;
+        }
+        citas.add(pos, nueva);
     }
 
     private boolean vaAntes(Cita a, Cita b) {
