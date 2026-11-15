@@ -85,10 +85,10 @@ public class Agenda {
 
     /**
      * Elimina la cita de un cliente en una fecha.
-     * Pre: el cliente no está vacío y tiene cita ese día.
+     * Pre: el cliente no está vacío, la fecha no es null y tiene cita ese día.
      * Post: hay una cita menos y las demás siguen en el mismo orden.
      *
-     * @param cliente nombre del cliente
+     * @param cliente identificador del cliente
      * @param fecha   día de la cita
      * @throws ArgumentoException si no se cumple la precondición
      */
@@ -103,7 +103,7 @@ public class Agenda {
      * Post: la cita se sustituye por una del mismo tipo que empieza minutos más tarde.
      * Las demás citas no cambian.
      *
-     * @param cliente nombre del cliente
+     * @param cliente identificador del cliente
      * @param fecha   día de la cita
      * @param minutos minutos que se retrasa
      * @throws ArgumentoException si no se cumple la precondición
@@ -167,12 +167,13 @@ public class Agenda {
     }
 
     /**
-     * Pre: el cliente no está vacío. Post: devuelve true si tiene cita ese día.
+     * Pre: el cliente no está vacío y la fecha no es null.
+     * Post: devuelve true si tiene cita ese día.
      *
-     * @param cliente nombre del cliente
+     * @param cliente identificador del cliente
      * @param fecha   día
      * @return true si tiene cita
-     * @throws ArgumentoException si el cliente está vacío o la fecha es null
+     * @throws ArgumentoException si no se cumple la precondición
      */
     public boolean tieneCita(String cliente, LocalDate fecha) throws ArgumentoException {
         comprobarCliente(cliente);
@@ -183,7 +184,7 @@ public class Agenda {
     /**
      * Pre: el cliente tiene cita ese día. Post: devuelve esa cita (es única).
      *
-     * @param cliente nombre del cliente
+     * @param cliente identificador del cliente
      * @param fecha   día
      * @return la cita del cliente ese día
      * @throws ArgumentoException si no se cumple la precondición
@@ -193,67 +194,68 @@ public class Agenda {
     }
 
     /**
-     * Pre: duracion mayor que 0.
+     * Pre: ningún dato es null y d mayor que 0.
      * Post: devuelve true si el intervalo está en horario y no se solapa con ninguna cita.
      *
-     * @param fecha    día
-     * @param inicio   hora de inicio
-     * @param duracion duración en minutos
+     * @param fecha día
+     * @param h     hora de inicio
+     * @param d     duración en minutos
      * @return true si está libre
-     * @throws ArgumentoException si algún dato es null o la duración no es mayor que 0
+     * @throws ArgumentoException si no se cumple la precondición
      */
-    public boolean estaLibre(LocalDate fecha, LocalTime inicio, int duracion) throws ArgumentoException {
+    public boolean estaLibre(LocalDate fecha, LocalTime h, int d) throws ArgumentoException {
         comprobarFecha(fecha);
-        if (inicio == null || duracion <= 0) {
+        if (h == null || d <= 0) {
             throw new ArgumentoException("Hora o duración no válidas");
         }
-        return libre(fecha, minutos(inicio), duracion, -1);
+        return libre(fecha, minutos(h), d, -1);
     }
 
     /**
-     * Pre: duracion mayor que 0. Post: devuelve true si existe una hora h con estaLibre(fecha, h, duracion).
+     * Pre: fecha no es null y d mayor que 0.
+     * Post: devuelve true si existe una hora h con estaLibre(fecha, h, d).
      *
-     * @param fecha    día
-     * @param duracion duración en minutos
+     * @param fecha día
+     * @param d     duración en minutos
      * @return true si hay hueco
-     * @throws ArgumentoException si la fecha es null o la duración no es mayor que 0
+     * @throws ArgumentoException si no se cumple la precondición
      */
-    public boolean hayHueco(LocalDate fecha, int duracion) throws ArgumentoException {
-        return primerMinutoLibre(fecha, duracion) != -1;
+    public boolean hayHueco(LocalDate fecha, int d) throws ArgumentoException {
+        return primerMinutoLibre(fecha, d) != -1;
     }
 
     /**
-     * Pre: duracion mayor que 0 y hayHueco(fecha, duracion).
-     * Post: devuelve la menor hora h con estaLibre(fecha, h, duracion).
+     * Pre: fecha no es null, d mayor que 0 y hayHueco(fecha, d).
+     * Post: devuelve la menor hora h con estaLibre(fecha, h, d).
      *
-     * @param fecha    día
-     * @param duracion duración en minutos
+     * @param fecha día
+     * @param d     duración en minutos
      * @return hora del primer hueco
      * @throws ArgumentoException si no se cumple la precondición
      */
-    public LocalTime primerHueco(LocalDate fecha, int duracion) throws ArgumentoException {
-        int h = primerMinutoLibre(fecha, duracion);
+    public LocalTime primerHueco(LocalDate fecha, int d) throws ArgumentoException {
+        int h = primerMinutoLibre(fecha, d);
         if (h == -1) {
-            throw new ArgumentoException("No hay hueco de " + duracion + " minutos ese día");
+            throw new ArgumentoException("No hay hueco de " + d + " minutos ese día");
         }
         return LocalTime.of(h / 60, h % 60);
     }
 
     /**
-     * Pre: duracion entre 1 y getJornada().
+     * Pre: desde no es null y d entre 1 y getJornada().
      * Post: devuelve la menor fecha igual o posterior a desde con hayHueco.
      *
-     * @param desde    primer día que se mira
-     * @param duracion duración en minutos
+     * @param desde primer día que se mira
+     * @param d     duración en minutos
      * @return primer día con hueco
      * @throws ArgumentoException si no se cumple la precondición
      */
-    public LocalDate primerDiaConHueco(LocalDate desde, int duracion) throws ArgumentoException {
-        if (duracion > getJornada()) {
+    public LocalDate primerDiaConHueco(LocalDate desde, int d) throws ArgumentoException {
+        if (d > getJornada()) {
             throw new ArgumentoException("La duración no puede superar la jornada");
         }
         LocalDate dia = desde;
-        while (!hayHueco(dia, duracion)) {
+        while (!hayHueco(dia, d)) {
             dia = dia.plusDays(1);
         }
         return dia;
@@ -267,7 +269,6 @@ public class Agenda {
      * @throws ArgumentoException si la fecha es null
      */
     public int getTiempoLibre(LocalDate fecha) throws ArgumentoException {
-        comprobarFecha(fecha);
         int libres = getJornada();
         for (Cita c : getCitasDel(fecha)) {
             libres = libres - c.getDuracion();
