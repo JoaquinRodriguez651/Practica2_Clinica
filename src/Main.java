@@ -79,6 +79,8 @@ void pruebaEjemplo() throws Exception {
             agenda.getCitaEn(0).getFecha().equals(LUNES19) && agenda.getCitaEn(1).getCliente().equals("Ana")
                     && agenda.getCitaEn(2).getCliente().equals("Bruno") && agenda.getCitaEn(5).getCliente().equals("Elena"));
     comprobar("Citas del martes 20", clientes(agenda.getCitasDel(MARTES20)).equals("Ana, Bruno, Carmen, David"));
+    comprobar("getCitasEntre martes 20 y miércoles 21: ambos incluidos y en orden",
+            clientes(agenda.getCitasEntre(MARTES20, MIERCOLES21)).equals("Ana, Bruno, Carmen, David, Elena"));
     comprobar("Minutos libres martes 20 = 95 y miércoles 21 = 0",
             agenda.getTiempoLibre(MARTES20) == 95 && agenda.getTiempoLibre(MIERCOLES21) == 0);
     comprobar("Libre el martes 20 a las 9:40 durante 20 min", agenda.estaLibre(MARTES20, LocalTime.of(9, 40), 20));
@@ -292,6 +294,18 @@ void pruebasPrecondiciones() throws Exception {
         comprobar("getTiempoLibre con fecha null", false);
     } catch (Exception e) {
         comprobarError("getTiempoLibre con fecha null", e, agenda, antes);
+    }
+    try {
+        agenda.getCitasEntre(null, MARTES20);
+        comprobar("getCitasEntre con fecha null", false);
+    } catch (Exception e) {
+        comprobarError("getCitasEntre con fecha null", e, agenda, antes);
+    }
+    try {
+        agenda.getCitasEntre(MIERCOLES21, MARTES20);
+        comprobar("getCitasEntre con la primera fecha posterior a la segunda", false);
+    } catch (Exception e) {
+        comprobarError("getCitasEntre con la primera fecha posterior a la segunda", e, agenda, antes);
     }
 }
 

@@ -149,17 +149,38 @@ public class Agenda {
     }
 
     /**
-     * Pre: fecha no es null. Post: devuelve una lista nueva con las citas de ese día, en orden.
+     * Pre: la fecha no es null Post: te regresa una lista nueva con las citas de ese día, en orden.
      *
      * @param fecha día
      * @return citas de ese día
      * @throws ArgumentoException si la fecha es null
      */
     public ArrayList<Cita> getCitasDel(LocalDate fecha) throws ArgumentoException {
-        comprobarFecha(fecha);
+        return getCitasEntre(fecha, fecha);
+    }
+
+    /**
+     * Devuelve las citas entre dos fechas, ambas incluidas. La clínica lo usa para
+     * los listados por periodo.
+     * Pre: desde y hasta no son null y desde no es posterior a hasta.
+     * Post: devuelve una lista nueva con las citas cuya fecha está entre desde y hasta,
+     * en orden cronológico.
+     *
+     * @param desde primer día del periodo
+     * @param hasta último día del periodo
+     * @return citas del periodo
+     * @throws ArgumentoException si no se cumple la precondición
+     */
+    public ArrayList<Cita> getCitasEntre(LocalDate desde, LocalDate hasta) throws ArgumentoException {
+        comprobarFecha(desde);
+        comprobarFecha(hasta);
+        if (desde.isAfter(hasta)) {
+            throw new ArgumentoException("La primera fecha no puede ser posterior a la segunda");
+        }
         ArrayList<Cita> lista = new ArrayList<>();
+        // citas ya está en orden cronológico, así que la lista sale ordenada
         for (Cita c : citas) {
-            if (c.getFecha().equals(fecha)) {
+            if (!c.getFecha().isBefore(desde) && !c.getFecha().isAfter(hasta)) {
                 lista.add(c);
             }
         }
