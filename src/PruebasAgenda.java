@@ -1,4 +1,4 @@
-// Práctica 1 - Parte 3: pruebas del TAD Agenda
+// Pruebas del TAD Agenda (antes estaban en el Main que será la aplicación de la clínica)
 // Cada prueba imprime OK o FALLO y al final se muestra el total.
 // Usamos CitaPrueba porque Cita es abstracta.
 
