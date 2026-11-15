@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
  * @version 2.0
  */
-public class Agenda {
+public class Agenda implements Serializable {
 
     private final LocalTime apertura;
     private final LocalTime cierre;
@@ -149,7 +150,7 @@ public class Agenda {
     }
 
     /**
-     * Pre: la fecha no es null Post: te regresa una lista nueva con las citas de ese día, en orden.
+     * Pre: fecha no es null. Post: devuelve una lista nueva con las citas de ese día, en orden.
      *
      * @param fecha día
      * @return citas de ese día
@@ -160,14 +161,11 @@ public class Agenda {
     }
 
     /**
-     * Devuelve las citas entre dos fechas, ambas incluidas. La clínica lo usa para
-     * los listados por periodo.
      * Pre: desde y hasta no son null y desde no es posterior a hasta.
-     * Post: devuelve una lista nueva con las citas cuya fecha está entre desde y hasta,
-     * en orden cronológico.
+     * Post: devuelve una lista nueva con las citas entre las dos fechas, ambas incluidas, en orden.
      *
-     * @param desde primer día del periodo
-     * @param hasta último día del periodo
+     * @param desde primer día
+     * @param hasta último día
      * @return citas del periodo
      * @throws ArgumentoException si no se cumple la precondición
      */
@@ -175,10 +173,9 @@ public class Agenda {
         comprobarFecha(desde);
         comprobarFecha(hasta);
         if (desde.isAfter(hasta)) {
-            throw new ArgumentoException("La primera fecha no puede ser posterior a la segunda");
+            throw new ArgumentoException("La fecha inicial no puede ser posterior a la final");
         }
         ArrayList<Cita> lista = new ArrayList<>();
-        // citas ya está en orden cronológico, así que la lista sale ordenada
         for (Cita c : citas) {
             if (!c.getFecha().isBefore(desde) && !c.getFecha().isAfter(hasta)) {
                 lista.add(c);

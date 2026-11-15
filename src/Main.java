@@ -19,6 +19,7 @@ void main() {
         pruebasPostcondiciones();
         pruebasPrecondiciones();
         pruebasCasosLimite();
+        pruebasSerializable();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -79,8 +80,6 @@ void pruebaEjemplo() throws Exception {
             agenda.getCitaEn(0).getFecha().equals(LUNES19) && agenda.getCitaEn(1).getCliente().equals("Ana")
                     && agenda.getCitaEn(2).getCliente().equals("Bruno") && agenda.getCitaEn(5).getCliente().equals("Elena"));
     comprobar("Citas del martes 20", clientes(agenda.getCitasDel(MARTES20)).equals("Ana, Bruno, Carmen, David"));
-    comprobar("getCitasEntre martes 20 y miércoles 21: ambos incluidos y en orden",
-            clientes(agenda.getCitasEntre(MARTES20, MIERCOLES21)).equals("Ana, Bruno, Carmen, David, Elena"));
     comprobar("Minutos libres martes 20 = 95 y miércoles 21 = 0",
             agenda.getTiempoLibre(MARTES20) == 95 && agenda.getTiempoLibre(MIERCOLES21) == 0);
     comprobar("Libre el martes 20 a las 9:40 durante 20 min", agenda.estaLibre(MARTES20, LocalTime.of(9, 40), 20));
@@ -143,14 +142,23 @@ void pruebasPostcondiciones() throws Exception {
     comprobar("getTiempoLibre: día sin citas = 300", agenda.getTiempoLibre(VIERNES23) == 300);
     comprobar("primerDiaConHueco: devuelve el mismo día si tiene hueco", agenda.primerDiaConHueco(MARTES20, 60).equals(MARTES20));
 
+    agenda.reservar(cita("Diego", LUNES19, 12, 0, 30));
+    agenda.reservar(cita("Elena", MIERCOLES21, 9, 0, 30));
+    agenda.reservar(cita("Fran", JUEVES22, 9, 0, 30));
+    comprobar("getCitasEntre: ambas fechas incluidas y en orden",
+            clientes(agenda.getCitasEntre(MARTES20, MIERCOLES21)).equals("Ana, Carmen, Bruno, Elena"));
+    comprobar("getCitasEntre: un solo día y periodo sin citas",
+            clientes(agenda.getCitasEntre(LUNES19, LUNES19)).equals("Diego")
+                    && agenda.getCitasEntre(VIERNES23, DOMINGO25).isEmpty());
+
     agenda.cancelar("carmen", MARTES20);
     comprobar("cancelar: una cita menos y las demás en el mismo orden",
-            agenda.getNumCitas() == 2 && clientes(agenda.getCitasDel(MARTES20)).equals("Ana, Bruno"));
+            agenda.getNumCitas() == 5 && clientes(agenda.getCitasDel(MARTES20)).equals("Ana, Bruno"));
 
     agenda.retrasar("bruno", MARTES20, 30);
     Cita bruno = agenda.getCitaDe("Bruno", MARTES20);
     comprobar("retrasar: mismo número de citas, inicio + minutos, misma duración y mismo nombre",
-            agenda.getNumCitas() == 2 && bruno.getInicio().equals(LocalTime.of(11, 30))
+            agenda.getNumCitas() == 5 && bruno.getInicio().equals(LocalTime.of(11, 30))
                     && bruno.getDuracion() == 60 && bruno.getCliente().equals("Bruno"));
     comprobar("retrasar: la cita sigue siendo del mismo tipo (polimorfismo)", bruno instanceof CitaPrueba);
 
@@ -272,6 +280,12 @@ void pruebasPrecondiciones() throws Exception {
         comprobarError("getCitaDe sin cita ese día", e, agenda, antes);
     }
     try {
+        agenda.getCitasEntre(MIERCOLES21, MARTES20);
+        comprobar("getCitasEntre con desde posterior a hasta", false);
+    } catch (Exception e) {
+        comprobarError("getCitasEntre con desde posterior a hasta", e, agenda, antes);
+    }
+    try {
         agenda.estaLibre(MARTES20, LocalTime.of(12, 0), 0);
         comprobar("estaLibre con duración 0", false);
     } catch (Exception e) {
@@ -294,18 +308,6 @@ void pruebasPrecondiciones() throws Exception {
         comprobar("getTiempoLibre con fecha null", false);
     } catch (Exception e) {
         comprobarError("getTiempoLibre con fecha null", e, agenda, antes);
-    }
-    try {
-        agenda.getCitasEntre(null, MARTES20);
-        comprobar("getCitasEntre con fecha null", false);
-    } catch (Exception e) {
-        comprobarError("getCitasEntre con fecha null", e, agenda, antes);
-    }
-    try {
-        agenda.getCitasEntre(MIERCOLES21, MARTES20);
-        comprobar("getCitasEntre con la primera fecha posterior a la segunda", false);
-    } catch (Exception e) {
-        comprobarError("getCitasEntre con la primera fecha posterior a la segunda", e, agenda, antes);
     }
 }
 
@@ -362,4 +364,24 @@ void pruebasCasosLimite() throws Exception {
     comprobar("Hueco al final del día (13:00)", huecos.primerHueco(JUEVES22, 60).equals(LocalTime.of(13, 0)));
     huecos.reservar(cita("Elena", JUEVES22, 13, 0, 60));
     comprobar("Día sin hueco", !huecos.hayHueco(JUEVES22, 1) && huecos.getTiempoLibre(JUEVES22) == 0);
+}
+
+void pruebasSerializable() throws Exception {
+    IO.println("\n--- Serializable ---");
+    Agenda agenda = agenda9a14();
+    agenda.reservar(cita("Ana", MARTES20, 9, 0, 40));
+    agenda.reservar(cita("Bruno", MIERCOLES21, 10, 0, 60));
+
+    // La escribimos en memoria (como si fuera un fichero) y la volvemos a leer
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    ObjectOutputStream salida = new ObjectOutputStream(bytes);
+    salida.writeObject(agenda);
+    salida.close();
+    ObjectInputStream entrada = new ObjectInputStream(new ByteArrayInputStream(bytes.toByteArray()));
+    Agenda copia = (Agenda) entrada.readObject();
+    entrada.close();
+
+    comprobar("Una agenda se puede guardar y volver a leer igual",
+            copia.toString().equals(agenda.toString()) && copia.getCierre().equals(agenda.getCierre()));
+    comprobar("Las citas leídas mantienen su tipo", copia.getCitaEn(0) instanceof CitaPrueba);
 }

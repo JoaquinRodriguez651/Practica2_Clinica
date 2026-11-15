@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -11,7 +12,7 @@ import java.time.LocalTime;
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
  * @version 2.0
  */
-public abstract class Cita {
+public abstract class Cita implements Serializable {
 
     private final String cliente;
     private final LocalDate fecha;
