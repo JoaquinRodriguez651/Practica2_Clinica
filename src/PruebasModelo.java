@@ -19,6 +19,7 @@ void main() {
         pruebasMascota();
         pruebasEdad();
         pruebasClinica();
+        pruebasVeterinario();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -51,6 +52,19 @@ Mascota kiwi() throws ArgumentoException {
 
 Mascota luna() throws ArgumentoException {
     return new Mascota("M004", "Luna", "Diego Martín", Especie.PERRO, LocalDate.of(2025, 2, 20), 8000);
+}
+
+// Un veterinario de cada especialidad
+Veterinario generalista() throws ArgumentoException {
+    return new Veterinario("V01", "Laura Pérez", Especialidad.GENERAL);
+}
+
+Veterinario cirujano() throws ArgumentoException {
+    return new Veterinario("V02", "Marcos Sanz", Especialidad.CIRUGIA);
+}
+
+Veterinario exoticos() throws ArgumentoException {
+    return new Veterinario("V03", "Sara Vidal", Especialidad.EXOTICOS);
 }
 
 void pruebasEnumerados() {
@@ -117,5 +131,38 @@ void pruebasClinica() throws Exception {
         comprobar("abre con fecha null", false);
     } catch (ArgumentoException e) {
         comprobar("abre con fecha null (" + e.getMessage() + ")", true);
+    }
+}
+
+
+void pruebasVeterinario() throws Exception {
+    IO.println("\n--- Veterinario ---");
+    Veterinario v = generalista();
+    comprobar("Getters del veterinario",
+            v.getCodigo().equals("V01") && v.getNombre().equals("Laura Pérez")
+                    && v.getEspecialidad() == Especialidad.GENERAL);
+    comprobar("Su agenda tiene el horario de la clínica y empieza vacía",
+            v.getAgenda().getApertura().equals(Clinica.APERTURA) && v.getAgenda().getCierre().equals(Clinica.CIERRE)
+                    && v.getAgenda().getNumCitas() == 0);
+
+    v.getAgenda().reservar(new CitaPrueba("M001", LUNES19, LocalTime.of(10, 0), 30));
+    comprobar("getAgenda devuelve la misma agenda, no una copia",
+            v.getAgenda() == v.getAgenda() && v.getAgenda().getNumCitas() == 1);
+
+    Veterinario otro = cirujano();
+    comprobar("Cada veterinario tiene su propia agenda",
+            otro.getAgenda() != v.getAgenda() && otro.getAgenda().getNumCitas() == 0);
+
+    try {
+        new Veterinario("  ", "Laura Pérez", Especialidad.GENERAL);
+        comprobar("Veterinario con código vacío", false);
+    } catch (ArgumentoException e) {
+        comprobar("Veterinario con código vacío (" + e.getMessage() + ")", true);
+    }
+    try {
+        new Veterinario("V04", "Pablo Ros", null);
+        comprobar("Veterinario sin especialidad", false);
+    } catch (ArgumentoException e) {
+        comprobar("Veterinario sin especialidad (" + e.getMessage() + ")", true);
     }
 }
