@@ -18,6 +18,7 @@ void main() {
         pruebasEnumerados();
         pruebasMascota();
         pruebasEdad();
+        pruebasClinica();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -103,4 +104,18 @@ void pruebasEdad() throws Exception {
             luna().getEdad(HOY) == 1 && kiwi().getEdad(HOY) == 2);
     comprobar("Una mascota nacida hoy tiene 0 años",
             new Mascota("M009", "Bebé", "Eva Gil", Especie.GATO, HOY, 300).getEdad(HOY) == 0);
+}
+
+void pruebasClinica() throws Exception {
+    IO.println("\n--- Clínica ---");
+    comprobar("Horario de la clínica: de 9:00 a 20:00",
+            Clinica.APERTURA.equals(LocalTime.of(9, 0)) && Clinica.CIERRE.equals(LocalTime.of(20, 0)));
+    comprobar("La clínica abre de lunes a sábado y cierra los domingos",
+            Clinica.abre(LUNES19) && Clinica.abre(HOY) && Clinica.abre(SABADO24) && !Clinica.abre(DOMINGO25));
+    try {
+        Clinica.abre(null);
+        comprobar("abre con fecha null", false);
+    } catch (ArgumentoException e) {
+        comprobar("abre con fecha null (" + e.getMessage() + ")", true);
+    }
 }
