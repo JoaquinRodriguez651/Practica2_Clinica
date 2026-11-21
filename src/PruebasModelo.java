@@ -20,6 +20,8 @@ void main() {
         pruebasEdad();
         pruebasClinica();
         pruebasVeterinario();
+        pruebasPuedeAtender();
+
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -165,4 +167,21 @@ void pruebasVeterinario() throws Exception {
     } catch (ArgumentoException e) {
         comprobar("Veterinario sin especialidad (" + e.getMessage() + ")", true);
     }
+
+}
+
+void pruebasPuedeAtender() throws Exception {
+    IO.println("\n--- puedeAtender ---");
+    Veterinario g = generalista();
+    Veterinario c = cirujano();
+    Veterinario e = exoticos();
+    comprobar("Generalista: atiende General, no Cirugía ni Exóticos",
+            g.puedeAtender(Especialidad.GENERAL) && !g.puedeAtender(Especialidad.CIRUGIA)
+                    && !g.puedeAtender(Especialidad.EXOTICOS));
+    comprobar("Cirujano: atiende General y Cirugía, no Exóticos",
+            c.puedeAtender(Especialidad.GENERAL) && c.puedeAtender(Especialidad.CIRUGIA)
+                    && !c.puedeAtender(Especialidad.EXOTICOS));
+    comprobar("Especialista en exóticos: atiende General y Exóticos, no Cirugía",
+            e.puedeAtender(Especialidad.GENERAL) && e.puedeAtender(Especialidad.EXOTICOS)
+                    && !e.puedeAtender(Especialidad.CIRUGIA));
 }

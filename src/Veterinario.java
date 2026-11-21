@@ -64,7 +64,22 @@ public class Veterinario implements Serializable {
         return agenda;
     }
 
+
+    /**
+     * Pre: ninguna. Post: devuelve true si la especialidad que exige la cita es
+     * General o es la del veterinario. Así un cirujano o un especialista en
+     * exóticos también pueden atender consultas normales.
+     *
+     * @param requerida especialidad que exige la cita
+     * @return true si puede atenderla
+     */
+    public boolean puedeAtender(Especialidad requerida) {
+        return requerida == Especialidad.GENERAL || requerida == especialidad;
+    }
+
     private static boolean vacio(String s) {
         return s == null || s.trim().isEmpty();
     }
+
+
 }
