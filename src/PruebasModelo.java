@@ -26,6 +26,7 @@ void main() {
         pruebasNormasComunes();
         pruebasNormasCirugia();
         pruebasTerminar();
+        pruebasToString();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -373,4 +374,21 @@ void pruebasTerminar() throws Exception {
     } catch (ArgumentoException e) {
         comprobar("Terminar con notas null (" + e.getMessage() + ")", otra.getResultado() == null);
     }
+}
+
+void pruebasToString() throws Exception {
+    IO.println("\n--- toString de las citas ---");
+    Veterinario v1 = laura();
+    CitaVeterinaria consulta = new Consulta(toby(), v1, LUNES19, LocalTime.of(9, 0), "cojera");
+    comprobar("Consulta pendiente",
+            consulta.toString().equals("09:00-09:30 Consulta de Toby (M001) con Laura Martín. Motivo: cojera [pendiente]"));
+    consulta.terminar(Resultado.ATENDIDA, "Esguince leve, reposo");
+    comprobar("Consulta atendida con notas",
+            consulta.toString().endsWith("Motivo: cojera [ATENDIDA: Esguince leve, reposo]"));
+    CitaVeterinaria cirugia = new Cirugia(toby(), pablo(), MARTES20, LocalTime.of(9, 0), 120, "quiste");
+    comprobar("Cirugía pendiente",
+            cirugia.toString().equals("09:00-11:00 Cirugía de Toby (M001) con Pablo Ortega. Intervención: quiste [pendiente]"));
+    v1.getAgenda().reservar(new Consulta(misi(), v1, LUNES19, LocalTime.of(12, 0), "pérdida de apetito"));
+    comprobar("La agenda muestra las citas con su toString",
+            v1.getAgenda().toString().contains("Consulta de Misi (M002) con Laura Martín"));
 }

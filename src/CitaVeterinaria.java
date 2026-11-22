@@ -165,4 +165,28 @@ public abstract class CitaVeterinaria extends Cita {
         }
         return 0;
     }
+
+    /**
+     * @return los datos comunes a todas las citas, por ejemplo
+     * "Consulta de Toby (M001) con Laura Martín"
+     */
+    protected String camposComunes() {
+        return getTipo() + " de " + mascota.getNombre() + " (" + mascota.getId() + ") con " + veterinario.getNombre();
+    }
+
+    /**
+     * @return la cita como "09:00-09:30 Consulta de Toby (M001) con Laura Martín.
+     * Motivo: cojera [pendiente]"
+     */
+    @Override
+    public String toString() {
+        String estado = "pendiente";
+        if (resultado != null) {
+            estado = resultado.toString();
+            if (!notas.isEmpty()) {
+                estado = estado + ": " + notas;
+            }
+        }
+        return getInicio() + "-" + getFin() + " " + camposComunes() + ". " + descripcion() + " [" + estado + "]";
+    }
 }
