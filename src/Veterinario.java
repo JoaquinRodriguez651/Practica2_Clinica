@@ -1,9 +1,8 @@
 import java.io.Serializable;
 
 /**
- * Veterinario de la clínica. Cada veterinario tiene su propia agenda, que crea
- * él mismo con el horario de la clínica (composición: la agenda no existe sin
- * el veterinario).
+ * Veterinario de la clínica. Tiene una especialidad, que decide qué citas
+ * puede atender, y su propia agenda con el horario de la clínica.
  *
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
  * @version 1.0
@@ -17,16 +16,14 @@ public class Veterinario implements Serializable {
 
     /**
      * Crea un veterinario con la agenda vacía.
-     * Pre: el código y el nombre no están vacíos y la especialidad no es null.
-     * Post: getAgenda() tiene el horario de la clínica y ninguna cita.
      *
-     * @param codigo       identificador del veterinario
+     * @param codigo       código, por ejemplo "V1"
      * @param nombre       nombre del veterinario
-     * @param especialidad especialidad del veterinario
-     * @throws ArgumentoException si no se cumple la precondición
+     * @param especialidad su especialidad
+     * @throws ArgumentoException si el código o el nombre están vacíos o la especialidad es null
      */
     public Veterinario(String codigo, String nombre, Especialidad especialidad) throws ArgumentoException {
-        if (vacio(codigo) || vacio(nombre)) {
+        if (codigo == null || codigo.trim().isEmpty() || nombre == null || nombre.trim().isEmpty()) {
             throw new ArgumentoException("El código y el nombre no pueden estar vacíos");
         }
         if (especialidad == null) {
@@ -35,7 +32,6 @@ public class Veterinario implements Serializable {
         this.codigo = codigo;
         this.nombre = nombre;
         this.especialidad = especialidad;
-        // la crea el propio veterinario: es suya y no se comparte (composición)
         agenda = new Agenda(Clinica.APERTURA, Clinica.CIERRE);
     }
 
@@ -54,32 +50,27 @@ public class Veterinario implements Serializable {
         return especialidad;
     }
 
-    /**
-     * Devuelve la agenda del veterinario, no una copia, para que la clínica
-     * pueda reservar y cancelar citas en ella.
-     *
-     * @return la agenda del veterinario
-     */
+    /** @return la agenda del veterinario (no una copia) */
     public Agenda getAgenda() {
         return agenda;
     }
 
-
     /**
-     * Pre: ninguna. Post: devuelve true si la especialidad que exige la cita es
-     * General o es la del veterinario. Así un cirujano o un especialista en
-     * exóticos también pueden atender consultas normales.
+     * Dice si puede atender una cita que exige una especialidad. Puede si la
+     * especialidad es General o es la suya.
      *
      * @param requerida especialidad que exige la cita
-     * @return true si puede atenderla
+     * @return true si la puede atender
      */
     public boolean puedeAtender(Especialidad requerida) {
         return requerida == Especialidad.GENERAL || requerida == especialidad;
     }
 
-    private static boolean vacio(String s) {
-        return s == null || s.trim().isEmpty();
+    /**
+     * @return el veterinario como "V1 Laura Martín (GENERAL)"
+     */
+    @Override
+    public String toString() {
+        return codigo + " " + nombre + " (" + especialidad + ")";
     }
-
-
 }

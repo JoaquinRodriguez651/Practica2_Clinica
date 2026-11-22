@@ -18,10 +18,10 @@ void main() {
         pruebasEnumerados();
         pruebasMascota();
         pruebasEdad();
-        pruebasClinica();
+        pruebasHorarioClinica();
         pruebasVeterinario();
         pruebasPuedeAtender();
-
+        pruebasConsulta();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -56,17 +56,17 @@ Mascota luna() throws ArgumentoException {
     return new Mascota("M004", "Luna", "Diego Martín", Especie.PERRO, LocalDate.of(2025, 2, 20), 8000);
 }
 
-// Un veterinario de cada especialidad
-Veterinario generalista() throws ArgumentoException {
-    return new Veterinario("V01", "Laura Pérez", Especialidad.GENERAL);
+// Veterinarios del enunciado
+Veterinario laura() throws ArgumentoException {
+    return new Veterinario("V1", "Laura Martín", Especialidad.GENERAL);
 }
 
-Veterinario cirujano() throws ArgumentoException {
-    return new Veterinario("V02", "Marcos Sanz", Especialidad.CIRUGIA);
+Veterinario pablo() throws ArgumentoException {
+    return new Veterinario("V2", "Pablo Ortega", Especialidad.CIRUGIA);
 }
 
-Veterinario exoticos() throws ArgumentoException {
-    return new Veterinario("V03", "Sara Vidal", Especialidad.EXOTICOS);
+Veterinario elena() throws ArgumentoException {
+    return new Veterinario("V3", "Elena Sanz", Especialidad.EXOTICOS);
 }
 
 void pruebasEnumerados() {
@@ -122,66 +122,100 @@ void pruebasEdad() throws Exception {
             new Mascota("M009", "Bebé", "Eva Gil", Especie.GATO, HOY, 300).getEdad(HOY) == 0);
 }
 
-void pruebasClinica() throws Exception {
-    IO.println("\n--- Clínica ---");
-    comprobar("Horario de la clínica: de 9:00 a 20:00",
+void pruebasHorarioClinica() {
+    IO.println("\n--- Horario de la clínica ---");
+    comprobar("La clínica abre a las 9:00 y cierra a las 20:00",
             Clinica.APERTURA.equals(LocalTime.of(9, 0)) && Clinica.CIERRE.equals(LocalTime.of(20, 0)));
-    comprobar("La clínica abre de lunes a sábado y cierra los domingos",
-            Clinica.abre(LUNES19) && Clinica.abre(HOY) && Clinica.abre(SABADO24) && !Clinica.abre(DOMINGO25));
-    try {
-        Clinica.abre(null);
-        comprobar("abre con fecha null", false);
-    } catch (ArgumentoException e) {
-        comprobar("abre con fecha null (" + e.getMessage() + ")", true);
-    }
+    comprobar("Abre de lunes a sábado", Clinica.abre(LUNES19) && Clinica.abre(SABADO24));
+    comprobar("Cierra los domingos", !Clinica.abre(DOMINGO25));
 }
-
 
 void pruebasVeterinario() throws Exception {
     IO.println("\n--- Veterinario ---");
-    Veterinario v = generalista();
-    comprobar("Getters del veterinario",
-            v.getCodigo().equals("V01") && v.getNombre().equals("Laura Pérez")
+    Veterinario v = laura();
+    comprobar("Getters de Laura",
+            v.getCodigo().equals("V1") && v.getNombre().equals("Laura Martín")
                     && v.getEspecialidad() == Especialidad.GENERAL);
-    comprobar("Su agenda tiene el horario de la clínica y empieza vacía",
-            v.getAgenda().getApertura().equals(Clinica.APERTURA) && v.getAgenda().getCierre().equals(Clinica.CIERRE)
-                    && v.getAgenda().getNumCitas() == 0);
-
-    v.getAgenda().reservar(new CitaPrueba("M001", LUNES19, LocalTime.of(10, 0), 30));
-    comprobar("getAgenda devuelve la misma agenda, no una copia",
-            v.getAgenda() == v.getAgenda() && v.getAgenda().getNumCitas() == 1);
-
-    Veterinario otro = cirujano();
-    comprobar("Cada veterinario tiene su propia agenda",
-            otro.getAgenda() != v.getAgenda() && otro.getAgenda().getNumCitas() == 0);
-
+    comprobar("toString de Laura", v.toString().equals("V1 Laura Martín (GENERAL)"));
+    comprobar("Su agenda empieza vacía y tiene el horario de la clínica",
+            v.getAgenda().getNumCitas() == 0 && v.getAgenda().getApertura().equals(Clinica.APERTURA)
+                    && v.getAgenda().getCierre().equals(Clinica.CIERRE));
+    comprobar("getAgenda devuelve siempre la misma agenda", v.getAgenda() == v.getAgenda());
     try {
-        new Veterinario("  ", "Laura Pérez", Especialidad.GENERAL);
+        new Veterinario("", "Laura Martín", Especialidad.GENERAL);
         comprobar("Veterinario con código vacío", false);
     } catch (ArgumentoException e) {
         comprobar("Veterinario con código vacío (" + e.getMessage() + ")", true);
     }
     try {
-        new Veterinario("V04", "Pablo Ros", null);
+        new Veterinario("V4", "Hugo Pérez", null);
         comprobar("Veterinario sin especialidad", false);
     } catch (ArgumentoException e) {
         comprobar("Veterinario sin especialidad (" + e.getMessage() + ")", true);
     }
-
 }
 
 void pruebasPuedeAtender() throws Exception {
     IO.println("\n--- puedeAtender ---");
-    Veterinario g = generalista();
-    Veterinario c = cirujano();
-    Veterinario e = exoticos();
-    comprobar("Generalista: atiende General, no Cirugía ni Exóticos",
-            g.puedeAtender(Especialidad.GENERAL) && !g.puedeAtender(Especialidad.CIRUGIA)
-                    && !g.puedeAtender(Especialidad.EXOTICOS));
-    comprobar("Cirujano: atiende General y Cirugía, no Exóticos",
-            c.puedeAtender(Especialidad.GENERAL) && c.puedeAtender(Especialidad.CIRUGIA)
-                    && !c.puedeAtender(Especialidad.EXOTICOS));
-    comprobar("Especialista en exóticos: atiende General y Exóticos, no Cirugía",
-            e.puedeAtender(Especialidad.GENERAL) && e.puedeAtender(Especialidad.EXOTICOS)
-                    && !e.puedeAtender(Especialidad.CIRUGIA));
+    Veterinario general = laura();
+    Veterinario cirujano = pablo();
+    Veterinario exoticos = elena();
+    comprobar("Todos pueden atender lo que exige General",
+            general.puedeAtender(Especialidad.GENERAL) && cirujano.puedeAtender(Especialidad.GENERAL)
+                    && exoticos.puedeAtender(Especialidad.GENERAL));
+    comprobar("Solo el cirujano puede operar",
+            cirujano.puedeAtender(Especialidad.CIRUGIA) && !general.puedeAtender(Especialidad.CIRUGIA)
+                    && !exoticos.puedeAtender(Especialidad.CIRUGIA));
+    comprobar("Solo la especialista en exóticos puede atender exóticos",
+            exoticos.puedeAtender(Especialidad.EXOTICOS) && !general.puedeAtender(Especialidad.EXOTICOS)
+                    && !cirujano.puedeAtender(Especialidad.EXOTICOS));
+}
+
+void pruebasConsulta() throws Exception {
+    IO.println("\n--- Consulta ---");
+    Veterinario v1 = laura();
+    Mascota toby = toby();
+    // Variables de tipo CitaVeterinaria: cada método se ejecuta según la clase real (polimorfismo)
+    CitaVeterinaria perro = new Consulta(toby, v1, LUNES19, LocalTime.of(9, 0), "cojera");
+    CitaVeterinaria gato = new Consulta(misi(), v1, LUNES19, LocalTime.of(12, 0), "pérdida de apetito");
+    CitaVeterinaria exotico = new Consulta(kiwi(), elena(), LUNES19, LocalTime.of(10, 0), "revisión anual");
+    comprobar("Consulta de perro: 35,00 €, 30 min, General",
+            perro.precio() == 3500 && perro.getTipo().equals("Consulta") && perro.getDuracion() == 30
+                    && perro.especialidadRequerida() == Especialidad.GENERAL);
+    comprobar("Consulta de gato: 35,00 €, 30 min, General",
+            gato.precio() == 3500 && gato.getDuracion() == 30 && gato.especialidadRequerida() == Especialidad.GENERAL);
+    comprobar("Consulta de exótico: 35,00 €, 45 min, Exóticos",
+            exotico.precio() == 3500 && exotico.getDuracion() == 45
+                    && exotico.especialidadRequerida() == Especialidad.EXOTICOS);
+    comprobar("La cita guarda la mascota y el veterinario, y el cliente es el id de la mascota",
+            perro.getMascota() == toby && perro.getVeterinario() == v1 && perro.getCliente().equals("M001"));
+    comprobar("descripcion de la consulta", perro.descripcion().equals("Motivo: cojera"));
+
+    Cita copia = perro.conInicio(LocalTime.of(11, 0));
+    comprobar("conInicio devuelve otra Consulta con los mismos datos",
+            copia instanceof Consulta && copia != perro && copia.getInicio().equals(LocalTime.of(11, 0))
+                    && ((Consulta) copia).getMotivo().equals("cojera"));
+
+    v1.getAgenda().reservar(perro);
+    v1.getAgenda().retrasar("M001", LUNES19, 30);
+    comprobar("Al retrasarla en la agenda sigue siendo una Consulta",
+            v1.getAgenda().getCitaDe("M001", LUNES19) instanceof Consulta);
+    try {
+        new Consulta(toby, v1, LUNES19, LocalTime.of(9, 0), "   ");
+        comprobar("Consulta sin motivo", false);
+    } catch (ArgumentoException e) {
+        comprobar("Consulta sin motivo (" + e.getMessage() + ")", true);
+    }
+    try {
+        new Consulta(toby, null, LUNES19, LocalTime.of(9, 0), "cojera");
+        comprobar("Consulta sin veterinario", false);
+    } catch (ArgumentoException e) {
+        comprobar("Consulta sin veterinario (" + e.getMessage() + ")", true);
+    }
+    try {
+        new Consulta(null, v1, LUNES19, LocalTime.of(9, 0), "cojera");
+        comprobar("Consulta sin mascota", false);
+    } catch (ArgumentoException e) {
+        comprobar("Consulta sin mascota (" + e.getMessage() + ")", true);
+    }
 }
