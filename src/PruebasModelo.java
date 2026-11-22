@@ -25,6 +25,7 @@ void main() {
         pruebasCirugia();
         pruebasNormasComunes();
         pruebasNormasCirugia();
+        pruebasTerminar();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -328,4 +329,48 @@ void pruebasNormasCirugia() throws Exception {
             new Cirugia(toby(), v2, MARTES20, LocalTime.of(9, 0), 45, "sutura"));
     debeFallar("Cirugía el domingo 25 (falla una norma común antes que las suyas)",
             new Cirugia(toby(), v2, DOMINGO25, LocalTime.of(9, 0), 60, "sutura"));
+}
+
+void pruebasTerminar() throws Exception {
+    IO.println("\n--- Terminar una cita ---");
+    CitaVeterinaria consulta = new Consulta(toby(), laura(), LUNES19, LocalTime.of(9, 0), "cojera");
+    comprobar("Una cita nueva está pendiente, sin notas y sin ingreso",
+            consulta.getResultado() == null && consulta.getNotas().equals("") && consulta.ingreso() == 0);
+    consulta.terminar(Resultado.ATENDIDA, "Esguince leve, reposo");
+    comprobar("Consulta atendida: guarda resultado y notas, e ingresa 35,00 €",
+            consulta.getResultado() == Resultado.ATENDIDA && consulta.getNotas().equals("Esguince leve, reposo")
+                    && consulta.ingreso() == 3500);
+
+    CitaVeterinaria cirugia = new Cirugia(toby(), pablo(), MARTES20, LocalTime.of(9, 0), 120, "quiste");
+    cirugia.terminar(Resultado.ATENDIDA, "");
+    comprobar("Cirugía atendida con notas vacías: ingresa 222,00 €",
+            cirugia.getNotas().equals("") && cirugia.ingreso() == 22200);
+
+    CitaVeterinaria noVino = new Consulta(luna(), laura(), MARTES20, LocalTime.of(11, 0), "vómitos");
+    noVino.terminar(Resultado.NO_PRESENTADO, "");
+    CitaVeterinaria cancelada = new Consulta(misi(), laura(), MARTES20, LocalTime.of(12, 0), "pérdida de apetito");
+    cancelada.terminar(Resultado.CANCELADA, "");
+    comprobar("No presentada y cancelada no se cobran",
+            noVino.getResultado() == Resultado.NO_PRESENTADO && noVino.ingreso() == 0
+                    && cancelada.getResultado() == Resultado.CANCELADA && cancelada.ingreso() == 0);
+    try {
+        consulta.terminar(Resultado.CANCELADA, "");
+        comprobar("Terminar una cita que ya estaba terminada", false);
+    } catch (ArgumentoException e) {
+        comprobar("Terminar una cita que ya estaba terminada (" + e.getMessage() + ")",
+                consulta.getResultado() == Resultado.ATENDIDA);
+    }
+    CitaVeterinaria otra = new Consulta(misi(), laura(), LUNES19, LocalTime.of(12, 0), "revisión");
+    try {
+        otra.terminar(null, "");
+        comprobar("Terminar con resultado null", false);
+    } catch (ArgumentoException e) {
+        comprobar("Terminar con resultado null (" + e.getMessage() + ")", otra.getResultado() == null);
+    }
+    try {
+        otra.terminar(Resultado.ATENDIDA, null);
+        comprobar("Terminar con notas null", false);
+    } catch (ArgumentoException e) {
+        comprobar("Terminar con notas null (" + e.getMessage() + ")", otra.getResultado() == null);
+    }
 }

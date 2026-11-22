@@ -16,7 +16,7 @@ public class Consulta extends CitaVeterinaria {
     private final String motivo;
 
     /**
-     * Crea una consulta. La duración la pone la especie de la mascota.
+     * Crea una consulta pendiente. La duración la pone la especie de la mascota.
      *
      * @param mascota     mascota que viene a la consulta
      * @param veterinario veterinario que la atiende

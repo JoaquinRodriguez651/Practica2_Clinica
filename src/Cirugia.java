@@ -25,7 +25,7 @@ public class Cirugia extends CitaVeterinaria {
     private final String intervencion;
 
     /**
-     * Crea una cirugía.
+     * Crea una cirugía pendiente.
      *
      * @param mascota      mascota que se opera
      * @param veterinario  veterinario que opera

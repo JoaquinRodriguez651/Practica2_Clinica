@@ -4,8 +4,9 @@ import java.time.LocalTime;
 
 /**
  * Cita de la clínica: una mascota con un veterinario. En la agenda, el cliente
- * de la cita es el id de la mascota. Cada tipo de cita (consulta, cirugía) es
- * una subclase.
+ * de la cita es el id de la mascota. Mientras está pendiente su resultado es
+ * null; cuando termina se guarda el resultado y las notas.
+ * Cada tipo de cita (consulta, cirugía) es una subclase.
  *
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
  * @version 1.0
@@ -14,9 +15,11 @@ public abstract class CitaVeterinaria extends Cita {
 
     private final Mascota mascota;
     private final Veterinario veterinario;
+    private Resultado resultado;
+    private String notas;
 
     /**
-     * Crea una cita.
+     * Crea una cita pendiente.
      *
      * @param mascota     mascota que viene a la cita
      * @param veterinario veterinario que la atiende
@@ -34,6 +37,8 @@ public abstract class CitaVeterinaria extends Cita {
         }
         this.mascota = mascota;
         this.veterinario = veterinario;
+        resultado = null;
+        notas = "";
     }
 
     // Antes de llamar a super no se puede usar this, por eso es static
@@ -45,7 +50,7 @@ public abstract class CitaVeterinaria extends Cita {
     }
 
     /**
-     * Comprueba un texto que recibe una cita (motivo, intervención...) y lo devuelve sin
+     * Comprueba un texto que recibe una cita (motivo, intervención, notas...) y lo devuelve sin
      * espacios al principio ni al final.
      *
      * @param s              texto que se comprueba
@@ -72,6 +77,16 @@ public abstract class CitaVeterinaria extends Cita {
     /** @return el veterinario de la cita */
     public Veterinario getVeterinario() {
         return veterinario;
+    }
+
+    /** @return el resultado, o null si la cita está pendiente */
+    public Resultado getResultado() {
+        return resultado;
+    }
+
+    /** @return las notas del veterinario ("" si no hay) */
+    public String getNotas() {
+        return notas;
     }
 
     /** @return precio de la cita en céntimos */
@@ -121,5 +136,33 @@ public abstract class CitaVeterinaria extends Cita {
      * @throws ClinicaException si alguna norma no se cumple
      */
     protected void comprobarNormasPropias(LocalDateTime ahora) throws ClinicaException {
+    }
+
+    /**
+     * Termina la cita con un resultado. Solo se puede hacer una vez.
+     *
+     * @param resultado cómo ha terminado la cita
+     * @param notas     notas del veterinario (pueden estar vacías)
+     * @throws ArgumentoException si el resultado o las notas son null o la cita ya estaba terminada
+     */
+    public void terminar(Resultado resultado, String notas) throws ArgumentoException {
+        if (resultado == null) {
+            throw new ArgumentoException("El resultado no puede ser null");
+        }
+        if (this.resultado != null) {
+            throw new ArgumentoException("La cita ya estaba terminada");
+        }
+        this.notas = texto(notas, "las notas", true);
+        this.resultado = resultado;
+    }
+
+    /**
+     * @return el precio si la cita fue atendida, 0 en otro caso
+     */
+    public int ingreso() {
+        if (resultado == Resultado.ATENDIDA) {
+            return precio();
+        }
+        return 0;
     }
 }
