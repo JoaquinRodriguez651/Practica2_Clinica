@@ -1,9 +1,10 @@
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
  * Cirugía de una mascota. Su precio depende de la duración y del peso de la
- * mascota (anestesia).
+ * mascota (anestesia), y tiene normas propias para programarla.
  *
  * @author Joaquín Rodríguez, Mario Cancela, Antonio Cano, Nicolas Zippold
  * @version 1.0
@@ -71,6 +72,28 @@ public class Cirugia extends CitaVeterinaria {
     @Override
     public String descripcion() {
         return "Intervención: " + intervencion;
+    }
+
+    /**
+     * Normas de la cirugía: se programa al menos el día anterior, termina como
+     * muy tarde a las 14:00 y dura de 30 a 240 minutos en tramos de 30.
+     *
+     * @param ahora fecha y hora actuales
+     * @throws ClinicaException si alguna norma no se cumple
+     */
+    @Override
+    protected void comprobarNormasPropias(LocalDateTime ahora) throws ClinicaException {
+        if (!getFecha().isAfter(ahora.toLocalDate())) {
+            throw new ClinicaException("Las cirugías se programan como tarde el día anterior");
+        }
+        if (getFin().isAfter(FIN_MANANA)) {
+            throw new ClinicaException("Una cirugía tiene que terminar como muy tarde a las " + FIN_MANANA);
+        }
+        if (getDuracion() < DURACION_MINIMA || getDuracion() > DURACION_MAXIMA
+                || getDuracion() % DURACION_MINIMA != 0) {
+            throw new ClinicaException("Una cirugía dura de " + DURACION_MINIMA + " a " + DURACION_MAXIMA
+                    + " minutos en tramos de " + DURACION_MINIMA);
+        }
     }
 
     /**

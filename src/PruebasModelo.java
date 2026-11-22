@@ -24,6 +24,7 @@ void main() {
         pruebasConsulta();
         pruebasCirugia();
         pruebasNormasComunes();
+        pruebasNormasCirugia();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -302,4 +303,29 @@ void pruebasNormasComunes() throws Exception {
             new Consulta(toby(), pablo(), LUNES19, LocalTime.of(10, 0), "cojera"));
     debeFallar("Cirugía con Laura, que no es cirujana",
             new Cirugia(toby(), v1, MARTES20, LocalTime.of(9, 0), 120, "extirpación de un quiste"));
+}
+
+void pruebasNormasCirugia() throws Exception {
+    IO.println("\n--- Normas de la cirugía ---");
+    Veterinario v2 = pablo();
+    debeCumplir("Cirugía de Toby el martes 20 de 9:00 a 11:00",
+            new Cirugia(toby(), v2, MARTES20, LocalTime.of(9, 0), 120, "extirpación de un quiste"));
+    debeFallar("Cirugía hoy por la tarde (hay que programarla el día anterior)",
+            new Cirugia(toby(), v2, HOY, LocalTime.of(12, 0), 60, "extirpación de un quiste"));
+    debeCumplir("Cirugía mañana, sábado 17 (al menos un día antes)",
+            new Cirugia(toby(), v2, HOY.plusDays(1), LocalTime.of(9, 0), 60, "extirpación de un quiste"));
+    debeCumplir("Cirugía de 12:00 a 14:00 (termina justo a las 14:00)",
+            new Cirugia(toby(), v2, MARTES20, LocalTime.of(12, 0), 120, "extirpación de un quiste"));
+    debeFallar("Cirugía de 12:30 a 14:30 (termina después de las 14:00)",
+            new Cirugia(toby(), v2, MARTES20, LocalTime.of(12, 30), 120, "extirpación de un quiste"));
+    debeCumplir("Cirugía de 30 min (la mínima)",
+            new Cirugia(toby(), v2, MARTES20, LocalTime.of(9, 0), 30, "sutura"));
+    debeCumplir("Cirugía de 240 min (la máxima)",
+            new Cirugia(toby(), v2, MARTES20, LocalTime.of(9, 0), 240, "fractura"));
+    debeFallar("Cirugía de 270 min (más de la máxima)",
+            new Cirugia(toby(), v2, MARTES20, LocalTime.of(9, 0), 270, "fractura"));
+    debeFallar("Cirugía de 45 min (no es un tramo de 30)",
+            new Cirugia(toby(), v2, MARTES20, LocalTime.of(9, 0), 45, "sutura"));
+    debeFallar("Cirugía el domingo 25 (falla una norma común antes que las suyas)",
+            new Cirugia(toby(), v2, DOMINGO25, LocalTime.of(9, 0), 60, "sutura"));
 }
