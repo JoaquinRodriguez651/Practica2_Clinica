@@ -22,6 +22,7 @@ void main() {
         pruebasVeterinario();
         pruebasPuedeAtender();
         pruebasConsulta();
+        pruebasCirugia();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -217,5 +218,38 @@ void pruebasConsulta() throws Exception {
         comprobar("Consulta sin mascota", false);
     } catch (ArgumentoException e) {
         comprobar("Consulta sin mascota (" + e.getMessage() + ")", true);
+    }
+}
+
+void pruebasCirugia() throws Exception {
+    IO.println("\n--- Cirugia ---");
+    Veterinario v2 = pablo();
+    CitaVeterinaria toby = new Cirugia(toby(), v2, MARTES20, LocalTime.of(9, 0), 120, "extirpación de un quiste");
+    comprobar("Cirugía de 120 min a Toby (28 kg): 180,00 € + 42,00 € = 222,00 €", toby.precio() == 22200);
+    CitaVeterinaria kiwi = new Cirugia(kiwi(), v2, MARTES20, LocalTime.of(12, 0), 30, "corte de uñas");
+    comprobar("Cirugía de 30 min a Kiwi (1,8 kg): 45,00 € + 2,70 € = 47,70 €", kiwi.precio() == 4770);
+    comprobar("Tipo, especialidad y descripción de la cirugía",
+            toby.getTipo().equals("Cirugía") && toby.especialidadRequerida() == Especialidad.CIRUGIA
+                    && toby.descripcion().equals("Intervención: extirpación de un quiste"));
+
+    Cita copia = toby.conInicio(LocalTime.of(10, 0));
+    comprobar("conInicio devuelve otra Cirugia con la misma duración e intervención",
+            copia instanceof Cirugia && copia.getDuracion() == 120
+                    && ((Cirugia) copia).getIntervencion().equals("extirpación de un quiste"));
+
+    // Polimorfismo: la misma llamada da un precio distinto según el tipo de cita
+    ArrayList<CitaVeterinaria> citas = new ArrayList<>();
+    citas.add(new Consulta(luna(), laura(), MARTES20, LocalTime.of(11, 0), "vómitos"));
+    citas.add(toby);
+    int total = 0;
+    for (CitaVeterinaria c : citas) {
+        total = total + c.precio();
+    }
+    comprobar("Una consulta y la cirugía de Toby suman 257,00 €", total == 25700);
+    try {
+        new Cirugia(toby(), v2, MARTES20, LocalTime.of(9, 0), 120, "");
+        comprobar("Cirugía sin intervención", false);
+    } catch (ArgumentoException e) {
+        comprobar("Cirugía sin intervención (" + e.getMessage() + ")", true);
     }
 }
