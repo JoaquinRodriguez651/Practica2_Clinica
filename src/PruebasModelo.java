@@ -23,6 +23,7 @@ void main() {
         pruebasPuedeAtender();
         pruebasConsulta();
         pruebasCirugia();
+        pruebasNormasComunes();
     } catch (Exception e) {
         fallos++;
         IO.println("Error inesperado: " + e.getMessage());
@@ -68,6 +69,26 @@ Veterinario pablo() throws ArgumentoException {
 
 Veterinario elena() throws ArgumentoException {
     return new Veterinario("V3", "Elena Sanz", Especialidad.EXOTICOS);
+}
+
+// La cita tiene que cumplir las normas: si salta ClinicaException, la prueba falla
+void debeCumplir(String descripcion, CitaVeterinaria c) {
+    try {
+        c.comprobarNormas(AHORA);
+        comprobar(descripcion, true);
+    } catch (ClinicaException e) {
+        comprobar(descripcion + " (" + e.getMessage() + ")", false);
+    }
+}
+
+// La cita no tiene que cumplir las normas: tiene que saltar ClinicaException
+void debeFallar(String descripcion, CitaVeterinaria c) {
+    try {
+        c.comprobarNormas(AHORA);
+        comprobar(descripcion, false);
+    } catch (ClinicaException e) {
+        comprobar(descripcion + " (" + e.getMessage() + ")", true);
+    }
 }
 
 void pruebasEnumerados() {
@@ -252,4 +273,33 @@ void pruebasCirugia() throws Exception {
     } catch (ArgumentoException e) {
         comprobar("Cirugía sin intervención (" + e.getMessage() + ")", true);
     }
+}
+
+void pruebasNormasComunes() throws Exception {
+    IO.println("\n--- Normas comunes ---");
+    Veterinario v1 = laura();
+    debeCumplir("Consulta el lunes 19 a las 9:00 (justo a la apertura)",
+            new Consulta(toby(), v1, LUNES19, LocalTime.of(9, 0), "cojera"));
+    debeFallar("Consulta el domingo 25",
+            new Consulta(toby(), v1, DOMINGO25, LocalTime.of(10, 0), "cojera"));
+    debeCumplir("Consulta el sábado 24",
+            new Consulta(toby(), v1, SABADO24, LocalTime.of(10, 0), "cojera"));
+    debeFallar("Consulta a las 8:30, antes de abrir",
+            new Consulta(toby(), v1, LUNES19, LocalTime.of(8, 30), "cojera"));
+    debeCumplir("Consulta de 19:30 a 20:00 (termina justo al cierre)",
+            new Consulta(toby(), v1, LUNES19, LocalTime.of(19, 30), "cojera"));
+    debeFallar("Consulta de 19:45 a 20:15 (termina después del cierre)",
+            new Consulta(toby(), v1, LUNES19, LocalTime.of(19, 45), "cojera"));
+    debeFallar("Consulta hoy a las 9:30, que ya ha pasado",
+            new Consulta(toby(), v1, HOY, LocalTime.of(9, 30), "cojera"));
+    debeCumplir("Consulta hoy a las 10:00, justo ahora",
+            new Consulta(toby(), v1, HOY, LocalTime.of(10, 0), "cojera"));
+    debeFallar("Consulta de Kiwi (exótico) con Laura (general)",
+            new Consulta(kiwi(), v1, LUNES19, LocalTime.of(10, 0), "revisión anual"));
+    debeCumplir("Consulta de Kiwi con Elena (exóticos)",
+            new Consulta(kiwi(), elena(), LUNES19, LocalTime.of(10, 0), "revisión anual"));
+    debeCumplir("Consulta de Toby con Pablo (un cirujano también es generalista)",
+            new Consulta(toby(), pablo(), LUNES19, LocalTime.of(10, 0), "cojera"));
+    debeFallar("Cirugía con Laura, que no es cirujana",
+            new Cirugia(toby(), v1, MARTES20, LocalTime.of(9, 0), 120, "extirpación de un quiste"));
 }

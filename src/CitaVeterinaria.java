@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -84,4 +85,41 @@ public abstract class CitaVeterinaria extends Cita {
 
     /** @return los datos propios del tipo de cita, por ejemplo el motivo */
     public abstract String descripcion();
+
+    /**
+     * Comprueba las normas para programar la cita, en este orden: domingo,
+     * horario, pasado y especialidad. Al final llama a comprobarNormasPropias
+     * para las normas de cada tipo de cita. Es final para que las subclases no
+     * se puedan saltar las normas comunes.
+     *
+     * @param ahora fecha y hora actuales
+     * @throws ClinicaException con el motivo si alguna norma no se cumple
+     */
+    public final void comprobarNormas(LocalDateTime ahora) throws ClinicaException {
+        if (!Clinica.abre(getFecha())) {
+            throw new ClinicaException("La clínica cierra los domingos");
+        }
+        if (getInicio().isBefore(Clinica.APERTURA) || getFin().isAfter(Clinica.CIERRE)) {
+            throw new ClinicaException("La cita tiene que empezar y terminar entre las "
+                    + Clinica.APERTURA + " y las " + Clinica.CIERRE);
+        }
+        if (LocalDateTime.of(getFecha(), getInicio()).isBefore(ahora)) {
+            throw new ClinicaException("No se puede programar una cita en el pasado");
+        }
+        if (!veterinario.puedeAtender(especialidadRequerida())) {
+            throw new ClinicaException(veterinario.getNombre() + " no puede atender esta cita, hace falta "
+                    + especialidadRequerida());
+        }
+        comprobarNormasPropias(ahora);
+    }
+
+    /**
+     * Normas propias de cada tipo de cita. Por defecto no hay ninguna; la
+     * cirugía lo redefine.
+     *
+     * @param ahora fecha y hora actuales
+     * @throws ClinicaException si alguna norma no se cumple
+     */
+    protected void comprobarNormasPropias(LocalDateTime ahora) throws ClinicaException {
+    }
 }
